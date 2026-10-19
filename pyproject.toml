@@ -1,0 +1,71 @@
+[project]
+name = "lanshare"
+version = "1.0.0"
+description = "Share files over your local network — Android & desktop"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = [
+    "flet==1.0.4",
+    "flet-permission-handler==1.0.4",
+    "ifaddr>=0.2.0",
+    "flask>=3.0.0",
+    "werkzeug>=3.0.0",
+    "qrcode>=7.4.2",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.flet]
+org = "org.lanshare"
+product = "LANShare"
+company = "LANShare"
+copyright = "Copyright (C) 2026 LANShare"
+
+[tool.flet.app]
+path = "src"
+module = "main"
+
+# ---- Icons & Splash ----
+# Note: paths are relative to `tool.flet.app.path` (= "src")
+[tool.flet.icons]
+android = "assets/icon.png"
+splash_android = "assets/splash_android.png"
+splash_android_dark = "assets/splash_android.png"
+
+[tool.flet.splash]
+color = "#000000"
+dark_color = "#000000"
+android_gravity = "center"
+hide_animation = true
+
+# ---- Android ----
+[tool.flet.android]
+dependencies = ["pyjnius"]
+# Local machine paths — uncomment if needed:
+# sdk_path = "/home/mohammed/Android/Sdk"
+#
+# [tool.flet.flutter]
+# path = "/home/mohammed/dev/flutter"
+#
+# [tool.flet.pip]
+# index_url = "https://mirrors.aliyun.com/pypi/simple/"
+
+[tool.flet.android.permission]
+"android.permission.INTERNET" = true
+"android.permission.ACCESS_NETWORK_STATE" = true
+"android.permission.ACCESS_WIFI_STATE" = true
+"android.permission.READ_MEDIA_IMAGES" = true
+"android.permission.READ_MEDIA_VIDEO" = true
+"android.permission.READ_MEDIA_AUDIO" = true
+"android.permission.MANAGE_EXTERNAL_STORAGE" = true
+"android.permission.ACCESS_FINE_LOCATION" = true
+"android.permission.ACCESS_COARSE_LOCATION" = true
+
+[tool.flet.android.manifest_application]
+usesCleartextTraffic = "true"
