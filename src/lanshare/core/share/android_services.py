@@ -6,7 +6,6 @@ import os
 
 logger = logging.getLogger(__name__)
 
-# Lazy imports to avoid breaking desktop builds
 try:
     from jnius import autoclass, cast
     JNIUS_AVAILABLE = True
@@ -15,40 +14,32 @@ except ImportError:
 
 
 def _get_activity():
-    """Get the current Android Activity using Flet's environment variables."""
     if not JNIUS_AVAILABLE:
         return None
     try:
-        # Flet uses serious_python which sets this environment variable
         activity_host_class = os.getenv("MAIN_ACTIVITY_HOST_CLASS_NAME")
         if activity_host_class:
             host = autoclass(activity_host_class)
             return host.mActivity
-        # Fallback for older Flet versions
         from android import mActivity
         return mActivity
     except Exception as e:
         logger.error(f"Failed to get Activity: {e}")
         return None
 
-
 def is_ignoring_battery_optimizations() -> bool:
     """Check if the app is currently exempt from battery optimization."""
     if not JNIUS_AVAILABLE:
         return False
-
     try:
         PowerManager = autoclass("android.os.PowerManager")
         Context = autoclass("android.content.Context")
         Build = autoclass("android.os.Build$VERSION")
-
         if Build.SDK_INT < 23:
-            return True  # Exemption not needed on older Android
-
+            return True
         activity = _get_activity()
         if not activity:
             return False
-
         context = activity.getApplicationContext()
         package_name = context.getPackageName()
         power_manager = cast(
@@ -60,6 +51,16 @@ def is_ignoring_battery_optimizations() -> bool:
         logger.error(f"Failed to check battery optimization status: {ex}")
         return False
 
+def has_storage_permission() -> bool:
+    """Check if the app has MANAGE_EXTERNAL_STORAGE permission."""
+    if not JNIUS_AVAILABLE:
+        return False
+    try:
+        Environment = autoclass("android.os.Environment")
+        return Environment.isExternalStorageManager()
+    except Exception as ex:
+        logger.error(f"Failed to check storage permission: {ex}")
+        return False
 
 def open_battery_optimization_dialog() -> bool:
     """Open the battery optimization exemption dialog.
