@@ -9,9 +9,9 @@ from ..theme import Space, Radius, Type
 def _label(icon, text, color):
     children = []
     if icon:
-        children.append(ft.Icon(icon, size=18, color=color))  # Increased icon size
+        children.append(ft.Icon(icon, size=18, color=color))
         children.append(ft.Container(width=Space.sm))
-    children.append(ft.Text(text, color=color, size=14, weight=ft.FontWeight.W_500))  # Increased text size
+    children.append(ft.Text(text, color=color, size=14, weight=ft.FontWeight.W_500))
     return ft.Row(children, spacing=0,
                   alignment=ft.MainAxisAlignment.CENTER, tight=True)
 
@@ -45,9 +45,7 @@ def _btn(*, content, bg, border, hover_bg, on_click, width, disabled=False):
     return c
 
 
-def PrimaryButton(P, text, icon=None, on_click=None, width=None,
-                  disabled=False):
-    """Filled — white in dark, black in light."""
+def PrimaryButton(P, text, icon=None, on_click=None, width=None, disabled=False):
     return _btn(
         content=_label(icon, text, P["on_primary"]),
         bg=P["primary"],
@@ -59,9 +57,7 @@ def PrimaryButton(P, text, icon=None, on_click=None, width=None,
     )
 
 
-def SecondaryButton(P, text, icon=None, on_click=None, width=None,
-                    disabled=False):
-    """Outlined — border only."""
+def SecondaryButton(P, text, icon=None, on_click=None, width=None, disabled=False):
     return _btn(
         content=_label(icon, text, P["text_dim"]),
         bg="transparent",
@@ -74,7 +70,6 @@ def SecondaryButton(P, text, icon=None, on_click=None, width=None,
 
 
 def DestructiveButton(P, text, icon=None, on_click=None, width=None):
-    """Outlined red — for destructive actions."""
     return _btn(
         content=_label(icon, text, P["error"]),
         bg="transparent",
@@ -86,9 +81,9 @@ def DestructiveButton(P, text, icon=None, on_click=None, width=None):
 
 
 def IconActionButton(P, icon, on_click=None, tooltip=None, size=40):
-    """Square icon-only button."""
+    """Square icon-only button. Increased icon size to 22 for better visibility."""
     c = ft.Container(
-        content=ft.Icon(icon, size=20, color=P["text_dim"]),
+        content=ft.Icon(icon, size=22, color=P["text_dim"]),
         width=size, height=size,
         border_radius=Radius.md,
         bgcolor="transparent",

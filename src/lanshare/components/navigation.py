@@ -8,11 +8,9 @@ from ..theme import Space, Radius, Type
 
 def NavSidebar(P, selected_index, on_change, destinations, state=None):
     """Sidebar for desktop. Brand is in the top bar; sidebar holds nav + status."""
-    # ---- Nav items ----
     items = []
     for i, d in enumerate(destinations):
         selected = (i == selected_index)
-
         if selected:
             bg = P["surface_2"]
             fg = P["text"]
@@ -25,21 +23,21 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
         item = ft.Container(
             content=ft.Row(
                 [
-                    ft.Icon(d["icon"], size=18, color=icon_color),
+                    # Increased icon size from 20 to 22
+                    ft.Icon(d["icon"], size=22, color=icon_color),
                     ft.Container(width=Space.md),
                     ft.Text(
                         d["label"],
-                        size=13,
-                        weight=ft.FontWeight.W_500 if selected
-                               else ft.FontWeight.W_400,
+                        size=14, # Increased font size from 13 to 14
+                        weight=ft.FontWeight.W_500 if selected else ft.FontWeight.W_400,
                         color=fg,
                     ),
                 ],
                 spacing=0,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            padding=ft.Padding.symmetric(
-                horizontal=Space.md, vertical=10),
+            # Slightly increased vertical padding for a taller item
+            padding=ft.Padding.symmetric(horizontal=Space.md, vertical=12),
             margin=ft.Margin.symmetric(horizontal=Space.sm, vertical=2),
             bgcolor=bg,
             border_radius=Radius.md,
@@ -54,34 +52,44 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
         padding=ft.Padding.symmetric(vertical=Space.md),
     )
 
-    # ---- Status block (bottom) ----
+    # ============================================================
+    # Status Block (Bottom)
+    # ============================================================
     is_online = bool(state and state.server_running)
     status_color = P["status_online"] if is_online else P["status_offline"]
 
+    # Use a glowing dot for status
     status_dot = ft.Container(
-        width=8,
-        height=8,
-        border_radius=4,
+        width=8, height=8, 
+        border_radius=4, 
         bgcolor=status_color,
         animate=ft.Animation(200, ft.AnimationCurve.EASE_OUT),
+        shadow=ft.BoxShadow(
+            blur_radius=6 if is_online else 0,
+            color=status_color,
+            spread_radius=1,
+        ) if is_online else None,
     )
 
+    # Larger font for the status label
     status_label = ft.Text(
         "Online" if is_online else "Offline",
-        size=12,
-        weight=ft.FontWeight.W_500,
-        color=P["status_online"] if is_online else P["text_muted"],
+        size=13,
+        weight=ft.FontWeight.W_600,
+        color=P["status_online"] if is_online else P["text_dim"],
     )
 
+    # Larger font and brighter color for the port
     port_label = ft.Text(
         f"Port {state.port}" if state else "Port 8000",
-        size=11,
-        color=P["text_faint"],
+        size=12,
+        color=P["text_muted"],
     )
 
     status_block = ft.Container(
-        content=ft.Column(
+        content=ft.Row(
             [
+                # Left side: Status indicator
                 ft.Row(
                     [
                         status_dot,
@@ -91,49 +99,38 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
                     spacing=0,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                ft.Container(height=2),
-                ft.Container(
-                    content=port_label,
-                    padding=ft.Padding.only(left=16),
-                ),
+                # Right side: Port
+                port_label,
             ],
-            spacing=0,
-            tight=True,
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
         ),
-        padding=ft.Padding.symmetric(
-            horizontal=Space.md, vertical=Space.md),
+        padding=ft.Padding.symmetric(horizontal=Space.md, vertical=Space.md),
         border=ft.Border.only(top=ft.BorderSide(1, P["border"])),
     )
 
     sidebar_content = ft.Column(
-        [
-            nav_block,
-            ft.Container(expand=True),
-            status_block,
-        ],
-        spacing=0,
-        tight=True,
-        expand=True,
+        [nav_block, ft.Container(expand=True), status_block],
+        spacing=0, tight=True, expand=True,
     )
 
     return ft.Container(
         content=sidebar_content,
-        width=220,
-        bgcolor=P["bg"],
+        width=220, bgcolor=P["bg"],
         border=ft.Border.only(right=ft.BorderSide(1, P["border"])),
         expand=True,
     )
 
 
 def NavBar(P, selected_index, on_change, destinations):
-    """Mobile — bottom nav bar without selected-item shadow."""
+    """Mobile — bottom nav bar with larger, better-spaced icons."""
     return ft.NavigationBar(
         selected_index=selected_index,
         on_change=on_change,
         destinations=[
             ft.NavigationBarDestination(
-                icon=ft.Icon(d["icon"], color=P["text_muted"]),
-                selected_icon=ft.Icon(d["icon"], color=P["text"]),
+                icon=ft.Icon(d["icon"], size=26, color=P["text_muted"]), # Increased to 26
+                selected_icon=ft.Icon(d["icon"], size=26, color=P["text"]), # Increased to 26
                 label=d["label"],
             )
             for d in destinations
@@ -141,7 +138,8 @@ def NavBar(P, selected_index, on_change, destinations):
         bgcolor=P["bg"],
         indicator_color="transparent",
         elevation=0,
-        height=64,
+        height=72, # Slightly taller to accommodate larger icons
+        label_behavior=ft.NavigationBarLabelBehavior.ALWAYS_SHOW,
     )
 
 
@@ -156,7 +154,5 @@ def _dispatch_nav(on_change, index: int):
         pass
 
 
-# Backwards-compat alias
 def NavRail(P, selected_index, on_change, destinations, state=None):
-    return NavSidebar(
-        P, selected_index, on_change, destinations, state=state)
+    return NavSidebar(P, selected_index, on_change, destinations, state=state)

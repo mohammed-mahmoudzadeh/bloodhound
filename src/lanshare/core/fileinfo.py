@@ -33,6 +33,15 @@ class FolderInfo:
             return "Empty folder"
         return f"{self.files_display} · {self.size_display}"
 
+    @property
+    def summary_hidden_count(self) -> str:
+        """If there are too many files, only show the size to avoid clutter."""
+        if self.files == 0:
+            return "Empty folder"
+        if self.files > 1000:
+            return self.size_display
+        return f"{self.files_display} · {self.size_display}"
+
 
 def scan_folder(path: str | Path, max_entries: int = 50000) -> FolderInfo:
     """Count files and total size in a folder.

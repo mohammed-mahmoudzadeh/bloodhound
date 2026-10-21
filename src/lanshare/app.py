@@ -34,9 +34,6 @@ def run():
 
 
 def main(page: ft.Page):
-    # ============================================================
-    # HIDE the system title bar BEFORE anything else.
-    # ============================================================
     if not IS_ANDROID:
         try:
             page.window.title_bar_hidden = True
@@ -57,7 +54,7 @@ def main(page: ft.Page):
     server = FlaskServer(port=8000)
 
     # ============================================================
-    # SPLASH ICON — path first, embedded base64 fallback
+    # Splash
     # ============================================================
     splash_icon_path = None
     _here = Path(__file__).resolve()
@@ -97,10 +94,16 @@ def main(page: ft.Page):
         ),
         bgcolor="#000000", alignment=ft.Alignment.CENTER, expand=True,
     )
-
     splash_state = {"removed": False}
 
-    theme_holder = {"mode": "auto", "system_dark": _system_is_dark(page), "P": None}
+    # ============================================================
+    # Theme holder
+    # ============================================================
+    theme_holder = {
+        "mode": "auto",
+        "system_dark": _system_is_dark(page),
+        "P": None,
+    }
 
     def current_dark() -> bool:
         m = theme_holder["mode"]
@@ -120,14 +123,12 @@ def main(page: ft.Page):
     refresh_palette()
     top_pad = 28 if IS_ANDROID else 0
 
-    # Warm-up pyjnius
     if IS_ANDROID:
         try:
             from jnius import autoclass
             autoclass("android.media.MediaMetadataRetriever")
             autoclass("android.provider.Settings")
             autoclass("android.os.PowerManager")
-            autoclass("android.os.Environment")
         except Exception:
             pass
 
@@ -165,7 +166,7 @@ def main(page: ft.Page):
         except Exception: pass
     atexit.register(shutdown_server)
 
-    # Window controls (unchanged)
+    # Window controls
     def on_minimize(e=None):
         try: page.window.minimized = True
         except Exception:
@@ -202,7 +203,7 @@ def main(page: ft.Page):
     def _window_controls() -> ft.Control:
         def _btn(icon, on_click, tooltip, hover_color):
             c = ft.Container(
-                content=ft.Icon(icon, size=16, color=P()["text_dim"]),
+                content=ft.Icon(icon, size=18, color=P()["text_dim"]), # Increased to 18
                 width=36, height=36, border_radius=Radius.md,
                 alignment=ft.Alignment.CENTER, ink=True, tooltip=tooltip,
                 on_click=on_click, animate=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
@@ -220,7 +221,7 @@ def main(page: ft.Page):
             _btn(ft.Icons.CLOSE_ROUNDED, on_close, "Close", "#e81123"),
         ], spacing=0, tight=True)
 
-    # Theme functions (unchanged)
+    # Theme toggles
     def set_theme(mode: str):
         if mode not in ("auto", "light", "dark"): return
         theme_holder["mode"] = mode
@@ -240,7 +241,7 @@ def main(page: ft.Page):
         if m == "light": return ft.Icons.LIGHT_MODE_ROUNDED, "Theme: Light"
         return ft.Icons.DARK_MODE_ROUNDED, "Theme: Dark"
 
-    # Network functions (unchanged)
+    # Network & Server logic
     def _pick_default_index(interfaces):
         for i, (_, ip) in enumerate(interfaces):
             if ip.startswith("192.168."): return i
@@ -307,7 +308,6 @@ def main(page: ft.Page):
             except Exception as ex: log(f"Restart failed: {ex}", "err")
         render()
 
-    # Server toggle (unchanged)
     def toggle_server(e=None):
         if server.is_alive():
             server.stop()
@@ -358,7 +358,6 @@ def main(page: ft.Page):
             state.server_running = False
         render()
 
-    # Folder picker (unchanged)
     async def pick_folder(e=None):
         log("Opening folder picker…", "info")
         try:
@@ -385,7 +384,6 @@ def main(page: ft.Page):
             render()
         except Exception as ex: log(f"Error: {ex}", "err")
 
-    # Share All (unchanged)
     async def share_all(e=None):
         if not IS_ANDROID:
             _set_share_dir(str(Path.home()))
@@ -404,7 +402,6 @@ def main(page: ft.Page):
             return
         _set_share_dir("/storage/emulated/0")
 
-    # Permissions (UPDATED)
     async def request_permissions(e=None):
         if not IS_ANDROID or ph is None:
             log("Not available on this platform.", "warn")
@@ -416,15 +413,12 @@ def main(page: ft.Page):
             log("flet_permission_handler not installed.", "err")
             render()
             return
-
         from .core.share.android_services import has_storage_permission
-
         if has_storage_permission():
             log("Storage access already granted.", "ok")
             state.view = 0
             render()
             return
-
         log("Opening system settings for 'All files access'…", "warn")
         try:
             status = await ph.request(fph.Permission.MANAGE_EXTERNAL_STORAGE)
@@ -438,17 +432,13 @@ def main(page: ft.Page):
             log(f"Permission request error: {ex}", "err")
             render()
 
-    # Battery exemption (unchanged)
     async def request_battery_exemption(e=None):
         if not IS_ANDROID:
             log("Battery exemption is Android-only.", "warn")
             render()
             return
         try:
-            from .core.share.android_services import (
-                is_ignoring_battery_optimizations,
-                open_battery_optimization_dialog,
-            )
+            from .core.share.android_services import is_ignoring_battery_optimizations, open_battery_optimization_dialog
         except ImportError as ex:
             log(f"Failed to load Android services: {ex}", "err")
             return
@@ -477,7 +467,6 @@ def main(page: ft.Page):
                 render()
         run_async(_check_after_return)
 
-    # URL actions (unchanged)
     async def copy_url(e=None):
         try:
             await ft.Clipboard().set(state.access_url)
@@ -492,7 +481,6 @@ def main(page: ft.Page):
                 webbrowser.open(state.access_url)
             except Exception: log(f"Open failed: {ex}", "err")
 
-    # QR dialog (unchanged)
     async def show_qr(e=None):
         try: from .core.qr import make_qr_data_uri
         except ImportError:
@@ -541,18 +529,12 @@ def main(page: ft.Page):
         render()
 
     handlers: Dict[str, Callable] = {
-        "log": log,
-        "cycle_theme": cycle_theme,
-        "set_theme": set_theme,
-        "toggle_server": toggle_server,
-        "pick_folder": lambda: run_async(pick_folder, None),
-        "share_all": lambda: run_async(share_all, None),
-        "request_permissions": lambda: run_async(request_permissions, None),
+        "log": log, "cycle_theme": cycle_theme, "set_theme": set_theme,
+        "toggle_server": toggle_server, "pick_folder": lambda: run_async(pick_folder, None),
+        "share_all": lambda: run_async(share_all, None), "request_permissions": lambda: run_async(request_permissions, None),
         "request_battery_exemption": lambda: run_async(request_battery_exemption, None),
-        "refresh_ip": refresh_ip,
-        "copy_url": lambda: run_async(copy_url, None),
-        "open_url": lambda: run_async(open_url, None),
-        "show_qr": lambda: run_async(show_qr, None),
+        "refresh_ip": refresh_ip, "copy_url": lambda: run_async(copy_url, None),
+        "open_url": lambda: run_async(open_url, None), "show_qr": lambda: run_async(show_qr, None),
         "on_iface_change": on_iface_change,
     }
 
@@ -570,6 +552,10 @@ def main(page: ft.Page):
     def render():
         p = P()
         page.bgcolor = p["bg"]
+        
+        # Ensure Flutter widgets follow our theme dynamically
+        page.theme_mode = ft.ThemeMode.DARK if current_dark() else ft.ThemeMode.LIGHT
+
         wide = (page.width or 0) >= BP.md
         theme_icon, theme_tooltip = _theme_icon()
         brand_logo = ft.Container(content=ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=22, color=p["text"]), width=40, height=40, bgcolor=p["surface_2"], border=ft.Border.all(1, p["border"]), border_radius=Radius.lg, alignment=ft.Alignment.CENTER)
@@ -598,7 +584,6 @@ def main(page: ft.Page):
 
     page.on_resize = lambda e: render()
 
-    # Lifecycle handling
     def on_lifecycle(e: ft.AppLifecycleStateChangeEvent):
         if IS_ANDROID and e.state == ft.AppLifecycleState.RESUME:
             from .core.share.android_services import has_storage_permission
@@ -619,7 +604,6 @@ def main(page: ft.Page):
     try: page.on_disconnect = on_disconnect
     except Exception: pass
 
-    # ---- Bootstrap ----
     log("App ready.", "ok")
     if IS_ANDROID:
         from .core.share.android_services import is_ignoring_battery_optimizations, has_storage_permission
@@ -679,6 +663,33 @@ def _configure_page(page: ft.Page):
     page.bgcolor = "#000000"
     page.theme_mode = ft.ThemeMode.DARK
 
+    # Light theme with proper NavigationBar colors
+    page.theme = ft.Theme(
+        font_family="Inter",  # Enforce Inter font for the entire app
+        color_scheme=ft.ColorScheme(
+            primary="#059669", 
+            surface="#ffffff",
+        ),
+        navigation_bar_theme=ft.NavigationBarTheme(
+            bgcolor="#ffffff", 
+            indicator_color="transparent",
+            label_text_style=ft.TextStyle(color="#18181b", size=12, font_family="Inter"),
+        ),
+    )
+
+    # Dark theme with proper NavigationBar colors
+    page.dark_theme = ft.Theme(
+        font_family="Inter",  # Enforce Inter font for the entire app
+        color_scheme=ft.ColorScheme(
+            primary="#10b981", 
+            surface="#000000",
+        ),
+        navigation_bar_theme=ft.NavigationBarTheme(
+            bgcolor="#000000", 
+            indicator_color="transparent",
+            label_text_style=ft.TextStyle(color="#fafafa", size=12, font_family="Inter"),
+        ),
+    )
 
 def _system_is_dark(page: ft.Page) -> bool:
     try: return page.platform_brightness == ft.Brightness.DARK

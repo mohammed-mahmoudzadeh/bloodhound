@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import flet as ft
+import os
 
 from ..config import IS_ANDROID
 from ..core.fileinfo import scan_folder
@@ -16,6 +17,23 @@ from ..components import (
     IconActionButton,
 )
 from ._scaffold import page_scaffold
+
+
+def _format_android_path(path: str) -> tuple[str, str]:
+    """Returns (display_name, display_path) for a given path."""
+    if not path:
+        return "No folder selected", ""
+
+    path = path.rstrip("/")
+
+    if path == "/storage/emulated/0":
+        return "Internal Storage", "Root of internal storage"
+    
+    if path.startswith("/storage/emulated/0/"):
+        short_path = path.replace("/storage/emulated/0/", "~/")
+        return os.path.basename(path) or path, short_path
+
+    return os.path.basename(path) or path, path
 
 
 def build_dashboard(P, state, handlers, page_width=1200):
@@ -85,66 +103,52 @@ def build_dashboard(P, state, handlers, page_width=1200):
     # Hero — access URL
     # ============================================================
     if is_narrow:
-        url_display = state.access_url.replace("http://", "", 1)
+        # Line 1: Title "Access URL" (matching other cards) and action buttons
+        # Line 2: Wi-Fi icon and the URL (less bold, balanced size)
         hero_content = ft.Column(
             [
                 ft.Row(
                     [
-                        ft.Container(
-                            content=ft.Icon(ft.Icons.WIFI_ROUNDED, size=18, color=P["text"]),
-                            width=36, height=36, bgcolor=P["surface_2"],
-                            border=ft.Border.all(1, P["border"]), border_radius=Radius.lg,
-                            alignment=ft.Alignment.CENTER,
+                        ft.Text(
+                            "Access URL", color=P["text"], **Type.title_md,
                         ),
-                        ft.Container(width=Space.sm + 2),
-                        ft.Text("ACCESS URL", color=P["text_muted"], **Type.label_sm),
                         ft.Container(expand=True),
-                        StatusChip(
-                            P, "Online" if state.server_running else "Offline",
-                            "online" if state.server_running else "offline",
-                        ),
+                        IconActionButton(P, icon=ft.Icons.CONTENT_COPY_ROUNDED, on_click=lambda e: handlers["copy_url"](), tooltip="Copy URL", size=32),
+                        ft.Container(width=Space.xs),
+                        IconActionButton(P, icon=ft.Icons.OPEN_IN_NEW_ROUNDED, on_click=lambda e: handlers["open_url"](), tooltip="Open in browser", size=32),
+                        ft.Container(width=Space.xs),
+                        IconActionButton(P, icon=ft.Icons.QR_CODE_ROUNDED, on_click=lambda e: handlers["show_qr"](), tooltip="Show QR code", size=32),
                     ],
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 ft.Container(height=Space.md),
                 ft.Row(
                     [
+                        ft.Icon(ft.Icons.WIFI_ROUNDED, size=20, color=P["text_dim"]),
+                        ft.Container(width=Space.sm),
                         ft.Text(
-                            url_display, color=P["text"], size=14, weight=ft.FontWeight.W_700,
+                            state.access_url, color=P["text"], size=16, weight=ft.FontWeight.W_500,
                             selectable=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS, expand=True,
                         ),
-                        ft.Container(width=Space.xs),
-                        IconActionButton(P, icon=ft.Icons.CONTENT_COPY_ROUNDED, on_click=lambda e: handlers["copy_url"](), tooltip="Copy URL", size=32),
-                        ft.Container(width=2),
-                        IconActionButton(P, icon=ft.Icons.OPEN_IN_NEW_ROUNDED, on_click=lambda e: handlers["open_url"](), tooltip="Open in browser", size=32),
-                        ft.Container(width=2),
-                        IconActionButton(P, icon=ft.Icons.QR_CODE_ROUNDED, on_click=lambda e: handlers["show_qr"](), tooltip="Show QR code", size=32),
                     ],
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
             ],
-            spacing=0, tight=True,
+            spacing=0,
+            tight=True,
         )
     else:
         hero_content = ft.Row(
             [
                 ft.Container(
-                    content=ft.Icon(ft.Icons.WIFI_ROUNDED, size=18, color=P["text"]),
-                    width=40, height=40, bgcolor=P["surface_2"],
-                    border=ft.Border.all(1, P["border"]), border_radius=Radius.lg,
+                    content=ft.Icon(ft.Icons.WIFI_ROUNDED, size=22, color=P["text"]),
+                    width=40, height=40,
                     alignment=ft.Alignment.CENTER,
                 ),
-                ft.Container(width=Space.md),
-                ft.Column(
-                    [
-                        ft.Text("ACCESS URL", color=P["text_muted"], **Type.label_sm),
-                        ft.Container(height=2),
-                        ft.Text(
-                            state.access_url, color=P["text"], size=16, weight=ft.FontWeight.W_700,
-                            selectable=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS,
-                        ),
-                    ],
-                    spacing=0, tight=True, expand=True,
+                ft.Container(width=Space.sm),
+                ft.Text(
+                    state.access_url, color=P["text"], size=18, weight=ft.FontWeight.W_600,
+                    selectable=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS, expand=True,
                 ),
                 IconActionButton(P, icon=ft.Icons.CONTENT_COPY_ROUNDED, on_click=lambda e: handlers["copy_url"](), tooltip="Copy URL", size=36),
                 ft.Container(width=Space.xs),
@@ -176,9 +180,9 @@ def build_dashboard(P, state, handlers, page_width=1200):
         value=str(state.iface_index),
         options=iface_options,
         on_select=lambda e: handlers["on_iface_change"](int(e.control.value or "0")),
-        height=44, border_radius=Radius.lg, bgcolor=P["surface_2"],
-        border_color=P["border"], focused_border_color=P["text"],
-        color=P["text"], text_style=ft.TextStyle(color=P["text"], size=14),
+        height=46, border_radius=Radius.lg, bgcolor=P["surface_2"],
+        border_color=P["border"], focused_border_color=P["primary"],
+        color=P["text"], text_style=ft.TextStyle(color=P["text"], size=15),
         border_width=1, content_padding=ft.Padding.symmetric(horizontal=Space.md, vertical=0),
     )
 
@@ -243,50 +247,98 @@ def build_dashboard(P, state, handlers, page_width=1200):
     if state.share_dir:
         try:
             info = scan_folder(state.share_dir)
-            folder_info_text = info.summary
+            folder_summary = info.summary_hidden_count
         except Exception:
-            folder_info_text = "Unable to read folder"
-    else:
-        folder_info_text = "No folder selected"
+            folder_summary = "Unable to read folder"
+            
+        folder_name, folder_path = _format_android_path(state.share_dir)
+        
+        if IS_ANDROID and folder_name == "Internal Storage":
+            folder_icon = ft.Icons.PHONE_ANDROID_ROUNDED
+        elif not IS_ANDROID and state.share_dir == str(os.path.expanduser("~")):
+            folder_icon = ft.Icons.COMPUTER_ROUNDED
+        else:
+            folder_icon = ft.Icons.FOLDER_ROUNDED
 
-    # Improved folder info block with larger icon and text
-    folder_info = ft.Container(
-        content=ft.Row(
+        folder_info = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Icon(folder_icon, size=24, color=P["text"]),
+                        width=44, height=44,
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                    ft.Container(width=Space.md),
+                    ft.Column(
+                        [
+                            ft.Text(
+                                folder_name, color=P["text"], size=14, weight=ft.FontWeight.W_600,
+                                max_lines=1, overflow=ft.TextOverflow.ELLIPSIS,
+                            ),
+                            ft.Text(
+                                f"{folder_path}  ·  {folder_summary}" if folder_path else folder_summary,
+                                color=P["text_muted"], size=11, weight=ft.FontWeight.W_400,
+                                max_lines=1, overflow=ft.TextOverflow.ELLIPSIS,
+                            ),
+                        ],
+                        spacing=2, tight=True, expand=True,
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            padding=ft.Padding.symmetric(horizontal=0, vertical=Space.sm),
+            bgcolor=ft.Colors.TRANSPARENT,
+        )
+
+        divider = ft.Container(height=1, bgcolor=P["border"], margin=ft.Margin.only(top=Space.md, bottom=Space.sm))
+
+        folder_content = ft.Column(
             [
-                ft.Container(
-                    content=ft.Icon(ft.Icons.FOLDER_ROUNDED, size=20, color=P["text_muted"]),
-                    width=40, height=40, bgcolor=P["surface_2"],
-                    border_radius=Radius.md, alignment=ft.Alignment.CENTER,
-                ),
-                ft.Container(width=Space.md),
-                ft.Column(
-                    [
-                        ft.Text("Current Folder", color=P["text_muted"], size=12, weight=ft.FontWeight.W_500),
-                        ft.Container(height=4),
-                        ft.Text(
-                            folder_info_text, color=P["text"], size=14, weight=ft.FontWeight.W_500,
-                            max_lines=2, overflow=ft.TextOverflow.ELLIPSIS,
-                        ),
-                    ],
-                    spacing=0, tight=True, expand=True,
-                ),
+                folder_buttons,
+                divider,
+                ft.Container(expand=True),
+                folder_info,
+                ft.Container(expand=True),
             ],
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
-        ),
-        padding=ft.Padding.symmetric(horizontal=0, vertical=Space.sm),
-        bgcolor=ft.Colors.TRANSPARENT,
-    )
+            spacing=0, tight=True,
+            expand=True
+        )
+    else:
+        placeholder = ft.Container(
+            content=ft.Row(
+                [
+                    ft.Container(
+                        content=ft.Icon(ft.Icons.FOLDER_OFF_ROUNDED, size=24, color=P["text_faint"]),
+                        width=44, height=44,
+                        alignment=ft.Alignment.CENTER,
+                    ),
+                    ft.Container(width=Space.md),
+                    ft.Text(
+                        "Select a folder to start sharing",
+                        color=P["text_faint"], size=13, italic=True,
+                        max_lines=2, overflow=ft.TextOverflow.ELLIPSIS,
+                        expand=True,
+                    ),
+                ],
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            ),
+            padding=ft.Padding.symmetric(horizontal=0, vertical=Space.sm),
+            bgcolor=ft.Colors.TRANSPARENT,
+        )
 
-    divider = ft.Container(height=1, bgcolor=P["border"], margin=ft.Margin.only(top=Space.md, bottom=Space.sm))
+        divider = ft.Container(height=1, bgcolor=P["border"], margin=ft.Margin.only(top=Space.md, bottom=Space.sm))
 
-    folder_content = ft.Column(
-        [
-            folder_buttons,
-            divider,
-            folder_info,
-        ],
-        spacing=0, tight=True,
-    )
+        folder_content = ft.Column(
+            [
+                folder_buttons,
+                divider,
+                ft.Container(expand=True),
+                placeholder,
+                ft.Container(expand=True),
+            ],
+            spacing=0, tight=True,
+            expand=True
+        )
 
     folder = SectionCard(
         P, dark=state.dark,
@@ -308,7 +360,7 @@ def build_dashboard(P, state, handlers, page_width=1200):
     # ============================================================
     # Layout with Optimized Equal Height Cards
     # ============================================================
-    CARD_HEIGHT = 235  # Reduced to minimize empty space
+    CARD_HEIGHT = 235
 
     if is_narrow:
         cards_section = ft.Column(

@@ -22,10 +22,9 @@ def _row_setting(
             [
                 ft.Column(
                     [
-                        ft.Text(title, color=P["text"], **Type.title_sm),
-                        ft.Container(height=2),
-                        ft.Text(subtitle, color=P["text_muted"],
-                                **Type.body_sm),
+                        ft.Text(title, color=P["text"], size=15, weight=ft.FontWeight.W_600),
+                        ft.Container(height=4),
+                        ft.Text(subtitle, color=P["text_muted"], size=13, weight=ft.FontWeight.W_400),
                     ],
                     spacing=0, tight=True, expand=True,
                 ),
@@ -42,13 +41,13 @@ def _divider(P):
     return ft.Container(
         height=1,
         bgcolor=P["border"],
-        margin=ft.Margin.symmetric(vertical=Space.xs),
+        margin=ft.Margin.symmetric(vertical=Space.sm),
     )
 
 
 def build_settings(P, state, handlers, page_width=1200):
     # ---- Appearance ----
-    current_mode = "dark" if state.dark else "light"
+    current_mode = getattr(state, "theme_mode", "auto")
 
     theme_dropdown = ft.Dropdown(
         value=current_mode,
@@ -57,16 +56,15 @@ def build_settings(P, state, handlers, page_width=1200):
             ft.dropdown.Option(key="light", text="Light"),
             ft.dropdown.Option(key="dark", text="Dark"),
         ],
-        on_select=lambda e: handlers["set_theme"](
-            e.control.value or "auto"),
+        on_select=lambda e: handlers["set_theme"](e.control.value or "auto"),
         width=200,
-        height=44,
+        height=46,
         border_radius=Radius.lg,
         bgcolor=P["surface_2"],
         border_color=P["border"],
-        focused_border_color=P["text"],
+        focused_border_color=P["primary"],
         color=P["text"],
-        text_style=ft.TextStyle(color=P["text"], size=14),
+        text_style=ft.TextStyle(color=P["text"], size=15),
         border_width=1,
         content_padding=ft.Padding.symmetric(
             horizontal=Space.md, vertical=0,
@@ -91,10 +89,10 @@ def build_settings(P, state, handlers, page_width=1200):
 
     # ---- Server ----
     device_field = TextInput(
-        P, hint="Device name", value="My Phone", width=200,
+        P, hint="Device name", value="My Phone", width=220,
     )
     default_port_field = TextInput(
-        P, hint="8000", value=state.port or "8000", width=120,
+        P, hint="8000", value=state.port or "8000", width=140,
     )
 
     server_card = SectionCard(
@@ -130,15 +128,14 @@ def build_settings(P, state, handlers, page_width=1200):
                     P,
                     "LANShare",
                     "Version 1.0.0 — Local file sharing.",
-                    ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=24,
-                            color=P["text_muted"]),
+                    ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=24, color=P["text_muted"]),
                 ),
                 _divider(P),
                 _row_setting(
                     P,
                     "Share directory",
                     state.share_dir_display,
-                    ft.Container(),  # spacer
+                    ft.Container(),
                 ),
             ],
             spacing=0, tight=True,
