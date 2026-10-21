@@ -28,13 +28,6 @@ from .core.network import get_all_ips, get_primary_ip
 from .core.server import FlaskServer
 from .views import build_view
 
-# Android-specific imports (lazy)
-if IS_ANDROID:
-    from .core.share.android_services import (
-        request_ignore_battery_optimizations,
-        start_foreground_service,
-    )
-
 
 def run():
     ft.run(main)
@@ -165,7 +158,7 @@ def main(page: ft.Page):
     if IS_ANDROID:
         try:
             from jnius import autoclass
-            autoclass("android.media.MediaMetadataRetriever")  # warm-up
+            autoclass("android.media.MediaMetadataRetriever")
             autoclass("android.provider.Settings")
             autoclass("android.os.PowerManager")
         except Exception:
@@ -462,6 +455,7 @@ def main(page: ft.Page):
                 # ---- Android: start foreground service ----
                 if IS_ANDROID:
                     try:
+                        from .core.share.android_services import start_foreground_service
                         coro = start_foreground_service()
                         if callable(coro):
                             run_async(coro)
@@ -570,20 +564,62 @@ def main(page: ft.Page):
         except Exception as ex:
             log(f"Permission error: {ex}", "err")
         render()
+
     async def request_battery_exemption(e=None):
         if not IS_ANDROID:
             log("Battery exemption is Android-only.", "warn")
             render()
             return
+
         try:
-            ok = request_ignore_battery_optimizations()
-            if ok:
-                log("Battery settings opened. Find LANShare and set it to 'Unrestricted'.", "info")
-            else:
-                log("Could not open battery settings. Please open Settings > Apps > LANShare > Battery manually.", "warn")
-        except Exception as ex:
-            log(f"Battery exemption error: {ex}", "err")
+            from .core.share.android_services import (
+                is_ignoring_battery_optimizations,
+                open_battery_optimization_dialog,
+            )
+        except ImportError as ex:
+            log(f"Failed to load Android services: {ex}", "err")
+            return
+
+        # If already exempt, just inform the user
+        if is_ignoring_battery_optimizations():
+            log("Battery optimization exemption is already active.", "ok")
+            render()
+            return
+
+        # Try to open the dialog
+        ok = open_battery_optimization_dialog()
+        if not ok:
+            log(
+                "Could not open battery settings. Please enable it manually in Settings > Apps > LANShare > Battery.",
+                "warn"
+            )
+            render()
+            return
+
+        # Dialog was opened. Wait for the user to return, then re-check.
+        log("Battery settings opened. Waiting for your choice...", "info")
         render()
+
+        async def _check_after_return():
+            import asyncio
+            await asyncio.sleep(1.5)
+
+            for _ in range(10):
+                if is_ignoring_battery_optimizations():
+                    log("Battery exemption granted successfully.", "ok")
+                    render()
+                    return
+                await asyncio.sleep(1.0)
+
+            if not is_ignoring_battery_optimizations():
+                log(
+                    "Battery exemption was not granted. The server may stop in the background.",
+                    "warn"
+                )
+                render()
+
+        run_async(_check_after_return)
+
     # ---- URL actions ----
     async def copy_url(e=None):
         try:
@@ -923,8 +959,16 @@ def main(page: ft.Page):
     # ---- Bootstrap ----
     log("App ready.", "ok")
     if IS_ANDROID:
+        try:
+            from .core.share.android_services import is_ignoring_battery_optimizations
+            if not is_ignoring_battery_optimizations():
+                log("⚠️ Background server may be stopped. Use 'Battery Exemption' to fix this.", "warn")
+            else:
+                log("Battery optimization exemption is already active.", "ok")
+        except Exception as ex:
+            log(f"Could not check battery status: {ex}", "warn")
+
         log("Tap 'Permissions' then 'Share all'.", "info")
-        log("Use 'Battery Exemption' to keep the server alive.", "info")
     else:
         log("Pick a folder to start.", "info")
 

@@ -1,99 +1,135 @@
-"""Android-specific services: Foreground Service + Battery Optimization exemption."""
+"""Android-specific services: Battery Optimization exemption & Foreground Service."""
 from __future__ import annotations
 
 import logging
-from typing import Optional
+import os
 
 logger = logging.getLogger(__name__)
 
 # Lazy imports to avoid breaking desktop builds
 try:
     from jnius import autoclass, cast
-    from android import mActivity  # type: ignore
     JNIUS_AVAILABLE = True
 except ImportError:
     JNIUS_AVAILABLE = False
 
 
-def request_ignore_battery_optimizations() -> bool:
-    """Ask the user to exempt the app from battery optimization.
-    
-    This opens the system dialog. If the standard intent is not supported
-    by the OEM (e.g., Xiaomi, Samsung), it falls back to the general
-    battery optimization settings screen.
+def _get_activity():
+    """Get the current Android Activity using Flet's environment variables."""
+    if not JNIUS_AVAILABLE:
+        return None
+    try:
+        # Flet uses serious_python which sets this environment variable
+        activity_host_class = os.getenv("MAIN_ACTIVITY_HOST_CLASS_NAME")
+        if activity_host_class:
+            host = autoclass(activity_host_class)
+            return host.mActivity
+        # Fallback for older Flet versions
+        from android import mActivity
+        return mActivity
+    except Exception as e:
+        logger.error(f"Failed to get Activity: {e}")
+        return None
+
+
+def is_ignoring_battery_optimizations() -> bool:
+    """Check if the app is currently exempt from battery optimization."""
+    if not JNIUS_AVAILABLE:
+        return False
+
+    try:
+        PowerManager = autoclass("android.os.PowerManager")
+        Context = autoclass("android.content.Context")
+        Build = autoclass("android.os.Build$VERSION")
+
+        if Build.SDK_INT < 23:
+            return True  # Exemption not needed on older Android
+
+        activity = _get_activity()
+        if not activity:
+            return False
+
+        context = activity.getApplicationContext()
+        package_name = context.getPackageName()
+        power_manager = cast(
+            "android.os.PowerManager",
+            context.getSystemService(Context.POWER_SERVICE),
+        )
+        return power_manager is not None and power_manager.isIgnoringBatteryOptimizations(package_name)
+    except Exception as ex:
+        logger.error(f"Failed to check battery optimization status: {ex}")
+        return False
+
+
+def open_battery_optimization_dialog() -> bool:
+    """Open the battery optimization exemption dialog.
+
+    Returns True if a dialog/screen was successfully launched.
+    The caller must re-check the status after a delay.
     """
     if not JNIUS_AVAILABLE:
-        logger.warning("pyjnius not available; cannot request battery exemption.")
+        logger.warning("pyjnius not available; cannot open battery dialog.")
         return False
 
     try:
         Settings = autoclass("android.provider.Settings")
         Intent = autoclass("android.content.Intent")
         Uri = autoclass("android.net.Uri")
-        PowerManager = autoclass("android.os.PowerManager")
-        Context = autoclass("android.content.Context")
         Build = autoclass("android.os.Build$VERSION")
         PackageManager = autoclass("android.content.pm.PackageManager")
 
-        # Only Android 6.0+ (API 23) supports this
         if Build.SDK_INT < 23:
-            logger.info("Battery optimization exemption requires Android 6.0+.")
             return False
 
-        context = mActivity.getApplicationContext()
-        package_name = context.getPackageName()
-        power_manager = cast("android.os.PowerManager", 
-                             context.getSystemService(Context.POWER_SERVICE))
+        activity = _get_activity()
+        if not activity:
+            logger.error("Could not get Activity to launch intent.")
+            return False
 
-        if power_manager is not None and power_manager.isIgnoringBatteryOptimizations(package_name):
+        package_name = activity.getPackageName()
+
+        if is_ignoring_battery_optimizations():
             logger.info("App is already exempt from battery optimization.")
             return True
 
-        # --- 1. Try the direct exemption intent ---
+        # Attempt 1: Direct exemption dialog
         direct_intent = Intent()
         direct_intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
         direct_intent.setData(Uri.parse(f"package:{package_name}"))
 
-        # Check if any activity can handle this intent
-        resolve_info = context.getPackageManager().resolveActivity(
+        resolve_info = activity.getPackageManager().resolveActivity(
             direct_intent, PackageManager.MATCH_DEFAULT_ONLY
         )
-        
+
         if resolve_info is not None:
-            mActivity.startActivity(direct_intent)
+            activity.startActivity(direct_intent)
             logger.info("Battery optimization exemption dialog launched.")
             return True
         else:
-            logger.warning("Direct exemption intent not supported. Trying fallback.")
-            
-            # --- 2. Fallback: Open the general battery optimization list ---
+            logger.warning("Direct exemption intent not supported. Using fallback.")
+
+            # Attempt 2: General battery settings list
             fallback_intent = Intent()
             fallback_intent.setAction(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
-            
-            # Check if the fallback can be resolved (it usually can)
-            resolve_fallback = context.getPackageManager().resolveActivity(
+
+            resolve_fallback = activity.getPackageManager().resolveActivity(
                 fallback_intent, PackageManager.MATCH_DEFAULT_ONLY
             )
             if resolve_fallback is not None:
-                mActivity.startActivity(fallback_intent)
-                logger.info("Fallback battery settings screen opened. "
-                            "Please find LANShare and set it to 'Unrestricted'.")
+                activity.startActivity(fallback_intent)
+                logger.info("Fallback battery settings screen opened.")
                 return True
             else:
-                logger.error("No battery settings activity found on this device.")
+                logger.error("No battery settings activity found.")
                 return False
 
     except Exception as ex:
-        logger.error(f"Failed to request battery exemption: {ex}")
+        logger.error(f"Failed to open battery dialog: {ex}")
         return False
 
 
 def start_foreground_service() -> bool:
-    """Start a foreground service to keep the Flask server alive.
-    
-    Uses the `flet-android-background` package. Must be called from the main
-    thread (Flet UI thread). The service shows a persistent notification.
-    """
+    """Start a foreground service to keep the Flask server alive."""
     if not JNIUS_AVAILABLE:
         return False
 
@@ -105,22 +141,10 @@ def start_foreground_service() -> bool:
             await task.start(work=lambda: None)
 
         logger.info("Foreground service start requested.")
-        return _start  # caller must await this
+        return _start
     except ImportError:
-        logger.error("flet-android-background not installed. "
-                     "Add it to pyproject.toml dependencies.")
+        logger.error("flet-android-background not installed.")
         return False
     except Exception as ex:
         logger.error(f"Failed to start foreground service: {ex}")
         return False
-
-
-def stop_foreground_service():
-    """Stop the foreground service if running."""
-    if not JNIUS_AVAILABLE:
-        return
-    try:
-        from flet_android_background import BackgroundTask
-        logger.info("Foreground service stop requested.")
-    except Exception as ex:
-        logger.error(f"Failed to stop foreground service: {ex}")
