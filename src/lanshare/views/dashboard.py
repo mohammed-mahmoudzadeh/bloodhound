@@ -289,6 +289,13 @@ def build_dashboard(P, state, handlers, page_width=1200):
                 icon=ft.Icons.SHIELD_ROUNDED,
                 on_click=lambda e: handlers["request_permissions"]()),
         )
+        folder_buttons_children.append(ft.Container(height=Space.sm))
+        folder_buttons_children.append(
+            SecondaryButton(
+                P, "Battery Exemption",
+                icon=ft.Icons.BATTERY_ALERT_ROUNDED,
+                on_click=lambda e: handlers["request_battery_exemption"]()),
+        )
 
     if state.share_dir:
         try:

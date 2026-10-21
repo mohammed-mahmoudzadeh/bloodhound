@@ -28,6 +28,13 @@ from .core.network import get_all_ips, get_primary_ip
 from .core.server import FlaskServer
 from .views import build_view
 
+# Android-specific imports (lazy)
+if IS_ANDROID:
+    from .core.share.android_services import (
+        request_ignore_battery_optimizations,
+        start_foreground_service,
+    )
+
 
 def run():
     ft.run(main)
@@ -74,7 +81,6 @@ def main(page: ft.Page):
             break
 
     if splash_icon_path is None:
-        # Fallback: use image_as_data_uri if available
         try:
             from .core.qr import image_as_data_uri
             data_uri = image_as_data_uri("icon.png")
@@ -152,6 +158,18 @@ def main(page: ft.Page):
     refresh_palette()
 
     top_pad = 28 if IS_ANDROID else 0
+
+    # ============================================================
+    # Warm-up pyjnius on the main thread (Android only)
+    # ============================================================
+    if IS_ANDROID:
+        try:
+            from jnius import autoclass
+            autoclass("android.media.MediaMetadataRetriever")  # warm-up
+            autoclass("android.provider.Settings")
+            autoclass("android.os.PowerManager")
+        except Exception:
+            pass
 
     # ============================================================
     # Services — file picker + permission handler
@@ -440,6 +458,16 @@ def main(page: ft.Page):
                 state.server_running = True
                 log(f"Server running on {bind_host}:{port}", "ok")
                 log(f"Open: {state.access_url}", "info")
+
+                # ---- Android: start foreground service ----
+                if IS_ANDROID:
+                    try:
+                        coro = start_foreground_service()
+                        if callable(coro):
+                            run_async(coro)
+                            log("Foreground service requested.", "info")
+                    except Exception as ex:
+                        log(f"Foreground service failed: {ex}", "err")
             else:
                 log("Server failed to start — check logs.", "err")
                 state.server_running = False
@@ -485,9 +513,8 @@ def main(page: ft.Page):
         except Exception as ex:
             log(f"Error: {ex}", "err")
 
-    # ---- Share all / Permissions ----
+    # ---- Share all / Permissions / Battery ----
     async def share_all(e=None):
-        """Share all files. On Android, checks MANAGE_EXTERNAL_STORAGE first."""
         if not IS_ANDROID:
             _set_share_dir(str(Path.home()))
             return
@@ -507,7 +534,6 @@ def main(page: ft.Page):
         _set_share_dir("/storage/emulated/0")
 
     async def request_permissions(e=None):
-        """Request location + MANAGE_EXTERNAL_STORAGE on Android."""
         if not IS_ANDROID or ph is None:
             log("Not available on this platform.", "warn")
             render()
@@ -544,7 +570,20 @@ def main(page: ft.Page):
         except Exception as ex:
             log(f"Permission error: {ex}", "err")
         render()
-
+    async def request_battery_exemption(e=None):
+        if not IS_ANDROID:
+            log("Battery exemption is Android-only.", "warn")
+            render()
+            return
+        try:
+            ok = request_ignore_battery_optimizations()
+            if ok:
+                log("Battery settings opened. Find LANShare and set it to 'Unrestricted'.", "info")
+            else:
+                log("Could not open battery settings. Please open Settings > Apps > LANShare > Battery manually.", "warn")
+        except Exception as ex:
+            log(f"Battery exemption error: {ex}", "err")
+        render()
     # ---- URL actions ----
     async def copy_url(e=None):
         try:
@@ -672,6 +711,7 @@ def main(page: ft.Page):
         "pick_folder": lambda: run_async(pick_folder, None),
         "share_all": lambda: run_async(share_all, None),
         "request_permissions": lambda: run_async(request_permissions, None),
+        "request_battery_exemption": lambda: run_async(request_battery_exemption, None),
         "refresh_ip": refresh_ip,
         "copy_url": lambda: run_async(copy_url, None),
         "open_url": lambda: run_async(open_url, None),
@@ -884,6 +924,7 @@ def main(page: ft.Page):
     log("App ready.", "ok")
     if IS_ANDROID:
         log("Tap 'Permissions' then 'Share all'.", "info")
+        log("Use 'Battery Exemption' to keep the server alive.", "info")
     else:
         log("Pick a folder to start.", "info")
 
@@ -918,7 +959,6 @@ def main(page: ft.Page):
             except Exception:
                 pass
 
-        # Force a redraw
         try:
             w = page.window.width or WINDOW_DEFAULT_WIDTH
             h = page.window.height or WINDOW_DEFAULT_HEIGHT

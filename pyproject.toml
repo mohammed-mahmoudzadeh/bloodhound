@@ -18,6 +18,9 @@ dependencies = [
 desktop = [
     "pymediainfo>=6.0.0",
 ]
+android = [
+    "flet-android-background>=0.0.1",
+]
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
@@ -37,7 +40,6 @@ path = "src"
 module = "main"
 
 # ---- Icons & Splash ----
-# Note: paths are relative to `tool.flet.app.path` (= "src")
 [tool.flet.icons]
 android = "assets/icon.png"
 splash_android = "assets/splash_android.png"
@@ -51,15 +53,7 @@ hide_animation = true
 
 # ---- Android ----
 [tool.flet.android]
-dependencies = ["pyjnius"]
-# Local machine paths — uncomment if needed:
-# sdk_path = "/home/mohammed/Android/Sdk"
-#
-# [tool.flet.flutter]
-# path = "/home/mohammed/dev/flutter"
-#
-# [tool.flet.pip]
-# index_url = "https://mirrors.aliyun.com/pypi/simple/"
+dependencies = ["pyjnius", "flet-android-background"]
 
 [tool.flet.android.permission]
 "android.permission.INTERNET" = true
@@ -71,6 +65,10 @@ dependencies = ["pyjnius"]
 "android.permission.MANAGE_EXTERNAL_STORAGE" = true
 "android.permission.ACCESS_FINE_LOCATION" = true
 "android.permission.ACCESS_COARSE_LOCATION" = true
+"android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" = true
+"android.permission.FOREGROUND_SERVICE" = true
+"android.permission.FOREGROUND_SERVICE_DATA_SYNC" = true
+"android.permission.POST_NOTIFICATIONS" = true
 
 [tool.flet.android.manifest_application]
 usesCleartextTraffic = "true"
