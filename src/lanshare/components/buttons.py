@@ -9,9 +9,9 @@ from ..theme import Space, Radius, Type
 def _label(icon, text, color):
     children = []
     if icon:
-        children.append(ft.Icon(icon, size=16, color=color))
+        children.append(ft.Icon(icon, size=18, color=color))  # Increased icon size
         children.append(ft.Container(width=Space.sm))
-    children.append(ft.Text(text, color=color, **Type.label_lg))
+    children.append(ft.Text(text, color=color, size=14, weight=ft.FontWeight.W_500))  # Increased text size
     return ft.Row(children, spacing=0,
                   alignment=ft.MainAxisAlignment.CENTER, tight=True)
 
