@@ -1,15 +1,16 @@
 """Flask server wrapper — runs the web UI in a background thread."""
 from __future__ import annotations
 
-import sys
 import threading
-from pathlib import Path
 
-from ..config import CORE_DIR
+from werkzeug.serving import ThreadedWSGIServer
+
+from .share import create_app
+from .share.config import set_share_dir, set_port
 
 
 class FlaskServer:
-    """Thin wrapper around the Flask app defined in core/share.py."""
+    """Thin wrapper around the Flask app defined in core/share/."""
 
     def __init__(self, share_dir=None, port=8000):
         self.share_dir = share_dir
@@ -18,6 +19,7 @@ class FlaskServer:
         self.thread = None
         self.running = False
         self._srv = None
+        self._app = None
         self.last_error = None
 
     def start(self):
@@ -26,31 +28,23 @@ class FlaskServer:
         if not self.share_dir:
             raise RuntimeError("No share directory selected.")
 
-        # Make core/ importable
-        if str(CORE_DIR) not in sys.path:
-            sys.path.insert(0, str(CORE_DIR))
-
-        # Import the Flask app (cached after first import)
-        import share  # type: ignore  # noqa
-
-        # Configure
-        share.set_share_dir(str(self.share_dir))
-        share.PORT = self.port
-
-        from werkzeug.serving import ThreadedWSGIServer
+        # Build the app once, reuse on restart
+        if self._app is None:
+            self._app = create_app(share_dir=str(self.share_dir), port=self.port)
+        else:
+            set_share_dir(str(self.share_dir))
+            set_port(self.port)
 
         class _Srv(ThreadedWSGIServer):
             allow_reuse_address = True
             daemon_threads = True
 
-        # Create the server socket (this is where "port busy" is raised)
         try:
-            self._srv = _Srv(self.bind_host, self.port, share.app)
+            self._srv = _Srv(self.bind_host, self.port, self._app)
         except OSError as ex:
             self.last_error = str(ex)
             raise
 
-        # Run in a daemon thread
         self.thread = threading.Thread(
             target=self._srv.serve_forever,
             daemon=True,
