@@ -42,13 +42,13 @@ module = "main"
 # ---- Icons & Splash ----
 [tool.flet.icons]
 android = "assets/icon.png"
-splash_android = "assets/splash_android.png"
-splash_android_dark = "assets/splash_android.png"
+splash_android = "assets/splash_blank.png"
+splash_android_dark = "assets/splash_blank.png"
 
 [tool.flet.splash]
 color = "#000000"
 dark_color = "#000000"
-android_gravity = "center"
+android_gravity = "fill"
 hide_animation = true
 
 # ---- Android ----

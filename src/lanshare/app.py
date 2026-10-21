@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Callable, Dict
 
 import flet as ft
+from flet import Page
 
 from .config import (
     IS_ANDROID,
@@ -33,7 +34,7 @@ def run():
     ft.run(main)
 
 
-def main(page: ft.Page):
+def main(page: Page):
     if not IS_ANDROID:
         try:
             page.window.title_bar_hidden = True
@@ -50,11 +51,8 @@ def main(page: ft.Page):
 
     _configure_page(page)
 
-    state = AppState()
-    server = FlaskServer(port=8000)
-
     # ============================================================
-    # Splash
+    # Early Splash (Shown immediately before any heavy work)
     # ============================================================
     splash_icon_path = None
     _here = Path(__file__).resolve()
@@ -95,6 +93,19 @@ def main(page: ft.Page):
         bgcolor="#000000", alignment=ft.Alignment.CENTER, expand=True,
     )
     splash_state = {"removed": False}
+
+    # Show splash IMMEDIATELY, before building the main UI
+    try:
+        page.overlay.append(splash_layer)
+        page.update()
+    except Exception:
+        pass
+
+    # ============================================================
+    # Initialize state and server
+    # ============================================================
+    state = AppState()
+    server = FlaskServer(port=8000)
 
     # ============================================================
     # Theme holder
@@ -203,7 +214,7 @@ def main(page: ft.Page):
     def _window_controls() -> ft.Control:
         def _btn(icon, on_click, tooltip, hover_color):
             c = ft.Container(
-                content=ft.Icon(icon, size=18, color=P()["text_dim"]), # Increased to 18
+                content=ft.Icon(icon, size=18, color=P()["text_dim"]),
                 width=36, height=36, border_radius=Radius.md,
                 alignment=ft.Alignment.CENTER, ink=True, tooltip=tooltip,
                 on_click=on_click, animate=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
@@ -552,7 +563,7 @@ def main(page: ft.Page):
     def render():
         p = P()
         page.bgcolor = p["bg"]
-        
+
         # Ensure Flutter widgets follow our theme dynamically
         page.theme_mode = ft.ThemeMode.DARK if current_dark() else ft.ThemeMode.LIGHT
 
@@ -620,13 +631,12 @@ def main(page: ft.Page):
     page.add(root_holder)
     render()
     refresh_ip()
-    try: page.overlay.append(splash_layer)
-    except Exception: pass
     page.update()
 
+    # Remove splash after a delay to let the UI settle
     async def _remove_splash_async():
         import asyncio
-        await asyncio.sleep(2.5)
+        await asyncio.sleep(4.0)  # Increased to 4.0s for better visibility
         if not splash_state["removed"]:
             splash_state["removed"] = True
             try:
@@ -649,7 +659,7 @@ def main(page: ft.Page):
     try: page.run_task(_remove_splash_async)
     except Exception:
         def _fallback():
-            time.sleep(2.5)
+            time.sleep(4.0)
             try:
                 page.overlay.clear()
                 page.update()
@@ -667,11 +677,11 @@ def _configure_page(page: ft.Page):
     page.theme = ft.Theme(
         font_family="Inter",  # Enforce Inter font for the entire app
         color_scheme=ft.ColorScheme(
-            primary="#059669", 
+            primary="#059669",
             surface="#ffffff",
         ),
         navigation_bar_theme=ft.NavigationBarTheme(
-            bgcolor="#ffffff", 
+            bgcolor="#ffffff",
             indicator_color="transparent",
             label_text_style=ft.TextStyle(color="#18181b", size=12, font_family="Inter"),
         ),
@@ -681,11 +691,11 @@ def _configure_page(page: ft.Page):
     page.dark_theme = ft.Theme(
         font_family="Inter",  # Enforce Inter font for the entire app
         color_scheme=ft.ColorScheme(
-            primary="#10b981", 
+            primary="#10b981",
             surface="#000000",
         ),
         navigation_bar_theme=ft.NavigationBarTheme(
-            bgcolor="#000000", 
+            bgcolor="#000000",
             indicator_color="transparent",
             label_text_style=ft.TextStyle(color="#fafafa", size=12, font_family="Inter"),
         ),
