@@ -54,49 +54,15 @@ def main(page: Page):
     # ============================================================
     # Early Splash (Shown immediately before any heavy work)
     # ============================================================
-    splash_icon_path = None
-    _here = Path(__file__).resolve()
-    _icon_candidates = [
-        _here.parent.parent.parent / "assets" / "icon.png",
-        _here.parent.parent / "assets" / "icon.png",
-        Path.cwd() / "assets" / "icon.png",
-        Path.cwd() / "src" / "assets" / "icon.png",
-    ]
-    for _p in _icon_candidates:
-        if _p.is_file():
-            splash_icon_path = str(_p)
-            break
-    if splash_icon_path is None:
-        try:
-            from .core.qr import image_as_data_uri
-            data_uri = image_as_data_uri("icon.png")
-            if data_uri:
-                splash_icon_path = data_uri
-        except Exception:
-            splash_icon_path = None
-    if splash_icon_path is not None:
-        splash_icon = ft.Image(src=splash_icon_path, width=140, height=140)
-    else:
-        splash_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=120, color="#FACC15")
-
-    splash_layer = ft.Container(
-        content=ft.Column(
-            [
-                splash_icon,
-                ft.Container(height=20),
-                ft.Text("LANShare", size=32, weight=ft.FontWeight.W_700, color="#FAFAFA"),
-                ft.Container(height=6),
-                ft.Text("Share files over your local network", size=14, color="#71717A"),
-            ],
-            spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        ),
-        bgcolor="#000000", alignment=ft.Alignment.CENTER, expand=True,
+    temp_splash = ft.Container(
+        bgcolor="#000000",
+        alignment=ft.Alignment.CENTER,
+        expand=True,
     )
     splash_state = {"removed": False}
-
-    # Show splash IMMEDIATELY, before building the main UI
+    
     try:
-        page.overlay.append(splash_layer)
+        page.overlay.append(temp_splash)
         page.update()
     except Exception:
         pass
@@ -132,6 +98,63 @@ def main(page: Page):
         state.dark = current_dark()
 
     refresh_palette()
+
+    # ============================================================
+    # Build the real splash with theme-aware colors
+    # ============================================================
+    p = P()
+    
+    splash_icon_path = None
+    _here = Path(__file__).resolve()
+    # Updated paths to look directly inside "assets" (no "images" subfolder)
+    _icon_candidates = [
+        _here.parent.parent.parent / "assets" / "icon.png",
+        _here.parent.parent / "assets" / "icon.png",
+        Path.cwd() / "assets" / "icon.png",
+        Path.cwd() / "src" / "assets" / "icon.png",
+    ]
+    for _p in _icon_candidates:
+        if _p.is_file():
+            splash_icon_path = str(_p)
+            break
+    
+    if splash_icon_path is None:
+        try:
+            from .core.qr import image_as_data_uri
+            data_uri = image_as_data_uri("icon.png")
+            if data_uri:
+                splash_icon_path = data_uri
+        except Exception:
+            splash_icon_path = None
+    
+    if splash_icon_path is not None:
+        splash_icon = ft.Image(src=splash_icon_path, width=140, height=140)
+    else:
+        splash_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=120, color=p["primary"])
+
+    splash_layer = ft.Container(
+        content=ft.Column(
+            [
+                splash_icon,
+                ft.Container(height=20),
+                ft.Text("LANShare", size=32, weight=ft.FontWeight.W_700, color=p["text"]),
+                ft.Container(height=6),
+                ft.Text("Share files over your local network", size=14, color=p["text_muted"]),
+            ],
+            spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        ),
+        bgcolor=p["bg"],
+        alignment=ft.Alignment.CENTER, 
+        expand=True,
+    )
+
+    try:
+        page.overlay.clear()
+        page.overlay.append(splash_layer)
+        page.update()
+    except Exception:
+        pass
+
     top_pad = 28 if IS_ANDROID else 0
 
     if IS_ANDROID:
@@ -510,11 +533,23 @@ def main(page: Page):
                     page.dialog.open = False
                     page.update()
                 except Exception: pass
+        
         img_kwargs = {"src": data_uri, "width": 260, "height": 260}
         try: img_kwargs["fit"] = ft.BoxFit.CONTAIN
         except Exception: pass
         qr_image = ft.Image(**img_kwargs)
-        qr_card = ft.Container(content=qr_image, padding=ft.Padding.all(8), bgcolor="#FFFFFF", border_radius=Radius.md, on_click=_close_qr, ink=False)
+        
+        # Only the QR container has a border
+        qr_card = ft.Container(
+            content=qr_image,
+            padding=ft.Padding.all(12),
+            bgcolor="#FFFFFF",
+            border=ft.Border.all(1, p["text_faint"]),
+            border_radius=Radius.md,
+            on_click=_close_qr,
+            ink=False,
+        )
+        
         dialog_content = ft.Column([
             ft.Text("Scan to connect", size=17, weight=ft.FontWeight.W_600, color=p["text"]),
             ft.Container(height=4),
@@ -522,7 +557,17 @@ def main(page: Page):
             ft.Container(height=Space.md),
             qr_card,
         ], spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
-        dialog_kwargs = {"content": ft.Container(content=dialog_content, padding=ft.Padding.all(Space.md)), "bgcolor": p["surface"], "modal": True, "on_dismiss": _close_qr}
+        
+        # Simple dialog content, no extra border on the dialog itself
+        dialog_kwargs = {
+            "content": ft.Container(
+                content=dialog_content, 
+                padding=ft.Padding.all(Space.md)
+            ),
+            "bgcolor": p["surface_2"],  # Changed to surface_2 for better contrast
+            "modal": True,
+            "on_dismiss": _close_qr,
+        }
         try: dialog_kwargs["shape"] = ft.RoundedRectangleBorder(radius=Radius.lg)
         except Exception: pass
         dialog = ft.AlertDialog(**dialog_kwargs)
@@ -563,7 +608,7 @@ def main(page: Page):
     def render():
         p = P()
         page.bgcolor = p["bg"]
-
+        
         # Ensure Flutter widgets follow our theme dynamically
         page.theme_mode = ft.ThemeMode.DARK if current_dark() else ft.ThemeMode.LIGHT
 
@@ -636,7 +681,7 @@ def main(page: Page):
     # Remove splash after a delay to let the UI settle
     async def _remove_splash_async():
         import asyncio
-        await asyncio.sleep(4.0)  # Increased to 4.0s for better visibility
+        await asyncio.sleep(4.0)
         if not splash_state["removed"]:
             splash_state["removed"] = True
             try:
@@ -675,13 +720,13 @@ def _configure_page(page: ft.Page):
 
     # Light theme with proper NavigationBar colors
     page.theme = ft.Theme(
-        font_family="Inter",  # Enforce Inter font for the entire app
+        font_family="Inter",
         color_scheme=ft.ColorScheme(
-            primary="#059669",
+            primary="#059669", 
             surface="#ffffff",
         ),
         navigation_bar_theme=ft.NavigationBarTheme(
-            bgcolor="#ffffff",
+            bgcolor="#ffffff", 
             indicator_color="transparent",
             label_text_style=ft.TextStyle(color="#18181b", size=12, font_family="Inter"),
         ),
@@ -689,13 +734,13 @@ def _configure_page(page: ft.Page):
 
     # Dark theme with proper NavigationBar colors
     page.dark_theme = ft.Theme(
-        font_family="Inter",  # Enforce Inter font for the entire app
+        font_family="Inter",
         color_scheme=ft.ColorScheme(
-            primary="#10b981",
+            primary="#10b981", 
             surface="#000000",
         ),
         navigation_bar_theme=ft.NavigationBarTheme(
-            bgcolor="#000000",
+            bgcolor="#000000", 
             indicator_color="transparent",
             label_text_style=ft.TextStyle(color="#fafafa", size=12, font_family="Inter"),
         ),

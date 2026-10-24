@@ -9,8 +9,8 @@ from pathlib import Path
 def make_qr_data_uri(url: str) -> str | None:
     """Generate a QR code as a data URI (base64 SVG).
 
-    Uses the SVG backend of `qrcode` to avoid the pillow dependency,
-    which in turn avoids the flet-libwebp download issue on Android.
+    Always uses black modules on a white background for maximum scanner compatibility.
+    The SVG itself has a white background so it works in both light and dark themes.
     """
     try:
         import qrcode
@@ -44,16 +44,13 @@ def make_qr_data_uri(url: str) -> str | None:
 
 
 def image_as_data_uri(filename: str) -> str | None:
-    """Load an asset image and return it as a base64 data URI.
-
-    Kept for compatibility (e.g. splash icons in older code paths).
-    """
+    """Load an asset image and return it as a base64 data URI."""
     here = Path(__file__).resolve()
     candidates = [
-        here.parent.parent.parent / "assets" / filename,   # src/assets
-        here.parent.parent / "assets" / filename,          # lanshare/assets
-        Path.cwd() / "assets" / filename,                  # ./assets
-        Path.cwd() / "src" / "assets" / filename,          # ./src/assets
+        here.parent.parent.parent / "assets" / filename,
+        here.parent.parent / "assets" / filename,
+        Path.cwd() / "assets" / filename,
+        Path.cwd() / "src" / "assets" / filename,
     ]
 
     for path in candidates:

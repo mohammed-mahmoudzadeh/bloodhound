@@ -42,8 +42,8 @@ module = "main"
 # ---- Icons & Splash ----
 [tool.flet.icons]
 android = "assets/icon.png"
-splash_android = "assets/splash_blank.png"
-splash_android_dark = "assets/splash_blank.png"
+splash_android = "assets/splash_android.png"
+splash_android_dark = "assets/splash_android_dark.png"
 
 [tool.flet.splash]
 color = "#000000"
