@@ -96,6 +96,7 @@ def main(page: Page):
     def refresh_palette():
         theme_holder["P"] = build_palette(current_dark())
         state.dark = current_dark()
+        state.theme_mode = theme_holder["mode"]
 
     refresh_palette()
 
@@ -259,6 +260,7 @@ def main(page: Page):
     def set_theme(mode: str):
         if mode not in ("auto", "light", "dark"): return
         theme_holder["mode"] = mode
+        state.theme_mode = mode
         refresh_palette()
         page.theme_mode = ft.ThemeMode.DARK if current_dark() else ft.ThemeMode.LIGHT
         render()
@@ -277,10 +279,18 @@ def main(page: Page):
 
     # Network & Server logic
     def _pick_default_index(interfaces):
+        # Priority 1: 192.168.*.* (typical home Wi-Fi)
         for i, (_, ip) in enumerate(interfaces):
-            if ip.startswith("192.168."): return i
+            if ip.startswith("192.168."):
+                return i
+        # Priority 2: 127.0.0.1 (localhost)
         for i, (_, ip) in enumerate(interfaces):
-            if ip not in ("0.0.0.0", "127.0.0.1"): return i
+            if ip == "127.0.0.1":
+                return i
+        # Fallback: 0.0.0.0 (All Interfaces)
+        # for i, (_, ip) in enumerate(interfaces):
+        #     if ip == "0.0.0.0":
+        #         return i
         return 0
 
     def _find_index_for_ip(interfaces, target_ip):
@@ -584,6 +594,19 @@ def main(page: Page):
         except AttributeError: state.view = getattr(e, "selected_index", 0)
         render()
 
+    def set_port(value: str):
+        """Validate and update the port in state."""
+        try:
+            port_int = int(value)
+            if 1024 <= port_int <= 65535:
+                state.port = value
+            else:
+                # Keep old value if out of range (don't update state)
+                pass
+        except (ValueError, TypeError):
+            # Keep old value if not a valid number
+            pass
+
     handlers: Dict[str, Callable] = {
         "log": log, "cycle_theme": cycle_theme, "set_theme": set_theme,
         "toggle_server": toggle_server, "pick_folder": lambda: run_async(pick_folder, None),
@@ -592,6 +615,7 @@ def main(page: Page):
         "refresh_ip": refresh_ip, "copy_url": lambda: run_async(copy_url, None),
         "open_url": lambda: run_async(open_url, None), "show_qr": lambda: run_async(show_qr, None),
         "on_iface_change": on_iface_change,
+        "set_port": set_port,  # NEW
     }
 
     appbar_holder = ft.Container()

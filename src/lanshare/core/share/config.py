@@ -18,10 +18,18 @@ IS_ANDROID = (
 
 
 # ============================================================
+# Port defaults
+# ============================================================
+DEFAULT_PORT = 8000
+PORT_MIN = 1024
+PORT_MAX = 65535
+
+
+# ============================================================
 # Live globals (set at runtime)
 # ============================================================
 _SHARE_DIR: Path = Path.cwd().resolve()
-_PORT: int = 8000
+_PORT: int = DEFAULT_PORT
 _THUMB_DIR: Path | None = None
 
 

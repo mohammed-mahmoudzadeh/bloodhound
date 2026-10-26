@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Shared Files</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,{{ favicon }}">
+<link rel="apple-touch-icon" href="data:image/svg+xml,{{ favicon }}">
+<script>
+  (function(){
+    try {
+      var KEY = 'shared_files_theme';
+      var saved = localStorage.getItem(KEY);
+      var theme;
+      if (saved === 'dark' || saved === 'light') {
+        theme = saved;
+      } else {
+        var mq = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)');
+        theme = (mq && mq.matches) ? 'light' : 'dark';
+        localStorage.setItem(KEY, theme);
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+    } catch(e) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+</script>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="view-grid">
+
+<div class="splash" id="splash">
+  <div class="splash-icon">
+    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M4 8a2 2 0 0 1 2-2h6.5l2.2 2.5H26a2 2 0 0 1 2 2V23a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z" fill="#fbbf24"/>
+      <path d="M4 10h24" stroke="#f59e0b" stroke-width="1.2"/>
+    </svg>
+  </div>
+  <div class="splash-title">Shared Files</div>
+  <div class="splash-sub">Loading your library…</div>
+  <div class="splash-bar"></div>
+</div>
+
+<button class="fs-fab" id="fsFab" title="Fullscreen" aria-label="Toggle fullscreen">
+  <svg viewBox="0 0 24 24">
+    <path d="M3 9V3h6"/>
+    <path d="M15 3h6v6"/>
+    <path d="M9 21H3v-6"/>
+    <path d="M21 15v6h-6"/>
+  </svg>
+</button>
+
+<div class="container">
+  <header>
+    <h1>
+      <span class="title">Shared Files</span>
+      <span class="badge">{{ count }} items</span>
+    </h1>
+    <div class="subtitle">
+      <span>Path</span>
+      <span class="path-chip">{{ display_path }}</span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="Search across all subfolders..." autocomplete="off">
+    <div class="stat">Total <b>{{ total_size }}</b></div>
+    <div class="view-toggle" role="group" aria-label="View mode">
+      <button type="button" data-view="grid" title="Grid view" aria-label="Grid view">
+        <svg viewBox="0 0 24 24">{{ icons.grid[0]|safe }}</svg>
+      </button>
+      <button type="button" data-view="list" title="List view" aria-label="List view">
+        <svg viewBox="0 0 24 24">{{ icons.list[0]|safe }}</svg>
+      </button>
+    </div>
+    <div class="hidden-toggle" role="group" aria-label="Hidden files">
+      <button type="button" id="hiddenBtn" title="Show hidden files" aria-label="Toggle hidden files">
+        <svg viewBox="0 0 24 24"></svg>
+      </button>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Theme">
+      <button type="button" data-theme-value="dark" title="Dark theme" aria-label="Dark theme">
+        <svg viewBox="0 0 24 24">{{ icons.moon[0]|safe }}</svg>
+      </button>
+      <button type="button" data-theme-value="light" title="Light theme" aria-label="Light theme">
+        <svg viewBox="0 0 24 24">{{ icons.sun[0]|safe }}</svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="search-panel" id="searchPanel">
+    <div class="search-status" id="searchStatus" role="status" aria-live="polite">
+      <span class="spin"></span>
+      <span class="search-status-text">Searching…</span>
+    </div>
+    <ul class="files" id="searchResults"></ul>
+    <div class="search-truncated" id="searchTruncated" style="display:none;">
+      Showing first N results. Refine your search.
+    </div>
+  </div>
+
+  <ul class="files" id="fileList">
+    {% if parent is not none %}
+    <li class="parent-item" data-name="__parent__">
+      <a href="{{ url_for('browse', subpath=parent) }}" class="nav-link">
+        <div class="icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 19V5"/>
+            <path d="M5 12l7-7 7 7"/>
+          </svg>
+        </div>
+        <div class="info">
+          <div class="name">Back to parent folder</div>
+          <div class="meta">Go up one level</div>
+        </div>
+        <div class="arrow">
+          <svg viewBox="0 0 24 24">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
+      </a>
+    </li>
+    {% endif %}
+
+    {% for item in items %}
+    <li data-name="{{ item.name|lower }}">
+      {% if item.is_dir %}
+      <a href="{{ item.url }}" class="nav-link">
+        <div class="icon" style="color: {{ item.color }};"><svg viewBox="0 0 24 24">{{ item.svg|safe }}</svg></div>
+        <div class="info">
+          <div class="name">{{ item.name }}/</div>
+          <div class="meta"><span>{{ item.mtime }}</span></div>
+        </div>
+        <div class="arrow"><svg viewBox="0 0 24 24">{{ icons.right[0]|safe }}</svg></div>
+      </a>
+      {% else %}
+      <a href="{{ item.url }}"
+         class="file-row"
+         data-url="{{ item.url }}"
+         data-name="{{ item.name }}"
+         data-kind="{{ item.kind or '' }}"
+         data-size="{{ item.size }}"
+         data-quality="{{ item.quality or '' }}"
+         data-quality-tag="{{ item.quality_tag or '' }}"
+         {% if not item.kind %}download{% endif %}>
+        {% if item.thumb %}
+        <div class="thumb">
+          <img src="{{ item.thumb }}" alt="" loading="lazy" decoding="async">
+        </div>
+        {% else %}
+        <div class="icon" style="color: {{ item.color }};"><svg viewBox="0 0 24 24">{{ item.svg|safe }}</svg></div>
+        {% endif %}
+        <div class="info">
+          <div class="name">{{ item.name }}</div>
+          <div class="meta">
+            <span>{{ item.size }}</span>
+            <span>{{ item.mtime }}</span>
+            {% if item.quality %}<span class="quality-badge">{{ item.quality }}{% if item.quality_tag %}<span class="quality-tag">{{ item.quality_tag }}</span>{% endif %}</span>{% endif %}
+          </div>
+        </div>
+        <div class="arrow">
+          {% if item.kind %}
+          <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          {% else %}
+          <svg class="dl" viewBox="0 0 24 24">{{ icons.down[0]|safe }}</svg>
+          {% endif %}
+        </div>
+      </a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+
+  {% if not items and parent is none %}
+  <div class="empty">
+    <div class="big">
+      <svg viewBox="0 0 24 24">
+        <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/>
+        <path d="M9 14l3 3 3-3"/>
+      </svg>
+    </div>
+    <div>No files found in this directory</div>
+  </div>
+  {% endif %}
+
+  <footer>
+    <span>Local server</span>
+    <span class="pulse"></span>
+    <span>{{ host }}</span>
+  </footer>
+</div>
+
+<div class="viewer" id="viewer">
+  <div class="viewer-top">
+    <div class="viewer-title" id="vTitle"></div>
+    <div class="viewer-meta" id="vMeta"></div>
+    <a class="viewer-btn" id="vDownload" href="#" download title="Download">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M19 12l-7 7-7-7"/></svg>
+    </a>
+    <button class="viewer-btn" id="vClose" title="Close (Esc)">
+      <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="viewer-body">
+    <div class="viewer-content" id="vContent"></div>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

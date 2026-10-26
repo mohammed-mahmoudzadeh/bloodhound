@@ -12,6 +12,8 @@ dependencies = [
     "flask>=3.0.0",
     "werkzeug>=3.0.0",
     "qrcode>=7.4.2",
+    "argcomplete>=3.0.0",
+    "rich>=13.0.0",
 ]
 
 [project.optional-dependencies]
@@ -22,12 +24,24 @@ android = [
     "flet-android-background>=0.0.1",
 ]
 
+[project.scripts]
+lanshare = "lanshare.core.share.__main__:main"
+
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"lanshare.core.share" = ["templates/*.html", "static/*.css", "static/*.js"]
+
+[tool.setuptools.data-files]
+"/etc/bash_completion.d" = ["completion/lanshare"]
 
 [tool.flet]
 org = "org.lanshare"
@@ -70,3 +84,13 @@ dependencies = ["pyjnius", "flet-android-background"]
 
 [tool.flet.android.manifest_application]
 usesCleartextTraffic = "true"
+
+[tool.pyright]
+exclude = [
+    "**/build",
+    "**/build-back",
+    "**/.venv",
+    "**/__pycache__",
+    "**/dist",
+    "**/node_modules",
+]

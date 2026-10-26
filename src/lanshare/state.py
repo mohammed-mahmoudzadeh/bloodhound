@@ -16,6 +16,7 @@ class LogEntry:
 class AppState:
     # Theme
     dark: bool = False
+    theme_mode: str = "auto"     # auto | light | dark
 
     # Navigation
     view: int = 0

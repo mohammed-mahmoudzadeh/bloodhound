@@ -1,6 +1,8 @@
 """LANShare web server package — façade + entry point."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from flask import Flask
 
 from .config import (
@@ -43,7 +45,12 @@ def create_app(
 
     setup_request_logger()
 
-    app = Flask(__name__)
+    here = Path(__file__).parent
+    app = Flask(
+        __name__,
+        template_folder=str(here / "templates"),
+        static_folder=str(here / "static"),
+    )
     register_routes(app)
     start_watcher()
     return app

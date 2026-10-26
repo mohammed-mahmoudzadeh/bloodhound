@@ -103,8 +103,8 @@ def build_dashboard(P, state, handlers, page_width=1200):
     # Hero — access URL
     # ============================================================
     if is_narrow:
-        # Line 1: Title "Access URL" (matching other cards) and action buttons
-        # Line 2: Wi-Fi icon and the URL (less bold, balanced size)
+        # Line 1: Title "Access URL" and action buttons
+        # Line 2: Wi-Fi icon and the URL
         hero_content = ft.Column(
             [
                 ft.Row(
@@ -169,7 +169,15 @@ def build_dashboard(P, state, handlers, page_width=1200):
     # ============================================================
     # Server card
     # ============================================================
-    port_field = TextInput(P, hint="8000", value=state.port)
+    # Port field: editable only when server is stopped
+    port_field = TextInput(
+        P, hint="8000", value=state.port,
+        on_change=lambda e: handlers["set_port"](e.control.value),
+    )
+    if state.server_running:
+        port_field.disabled = True
+        port_field.bgcolor = P["surface"]
+        port_field.color = P["text_muted"]
 
     iface_options = [
         ft.dropdown.Option(key=str(i), text=f"{label} · {ip}")
@@ -184,7 +192,10 @@ def build_dashboard(P, state, handlers, page_width=1200):
         border_color=P["border"], focused_border_color=P["primary"],
         color=P["text"], text_style=ft.TextStyle(color=P["text"], size=15),
         border_width=1, content_padding=ft.Padding.symmetric(horizontal=Space.md, vertical=0),
+        disabled=state.server_running,  # Lock when running
     )
+    if state.server_running:
+        iface_dropdown.bgcolor = P["surface"]
 
     server_content = ft.Column(
         [
@@ -208,7 +219,12 @@ def build_dashboard(P, state, handlers, page_width=1200):
                     ),
                     ft.Container(width=Space.sm),
                     ft.Container(
-                        content=SecondaryButton(P, "Refresh IP", icon=ft.Icons.REFRESH_ROUNDED, on_click=lambda e: handlers["refresh_ip"]()),
+                        content=SecondaryButton(
+                            P, "Refresh IP",
+                            icon=ft.Icons.REFRESH_ROUNDED,
+                            on_click=lambda e: handlers["refresh_ip"](),
+                            disabled=state.server_running,
+                        ),
                         expand=True,
                     ),
                 ],

@@ -1,351 +1,371 @@
-<div align="center">
+حتماً. این نسخه ظاهر حرفه‌ای‌تر و جذاب‌تری دارد: هدر مرتب با لینک مستقیم ریپوی GitHub، بج‌های استاندارد، بخش‌بندی خواناتر، نمودار معماری و دستورات آماده اجرا. در عین حال، قابلیت‌هایی را که هنوز تأیید نشده‌اند به‌عنوان ویژگی قطعی معرفی نمی‌کند.
 
-# 📡 LANShare
+# LANShare
 
-### Share files over your local network — from Android or desktop.
+**Share files. Stay local. Keep it simple.**
 
-*A lightweight, elegant web interface for turning any folder into a browsable, streamable library.*
+LANShare is a cross-platform file-sharing application that turns a folder on your device into a browsable, streamable web library over your local network.
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![Flet](https://img.shields.io/badge/Flet-1.0.4-00B0FF?style=for-the-badge&logo=flutter&logoColor=white)](https://flet.dev)
-[![Flask](https://img.shields.io/badge/Flask-3.x-000000?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com)
-[![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
+Built with **Python, Flet, and Flask**, it combines a native-style application interface with a lightweight web server, plus a standalone CLI for headless environments.
 
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Linux%20%7C%20Windows%20%7C%20macOS-lightgrey?style=for-the-badge)](#-build-for-android)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](CONTRIBUTING.md)
-[![Made with ❤️](https://img.shields.io/badge/Made%20with-%E2%9D%A4%EF%B8%8F-red?style=for-the-badge)](#)
+<p align="center">
+  <a href="https://github.com/mohammed-mahmoudzadeh/lanshare">View Repository</a>
+</p>
 
-[Features](#-features) · [Quick Start](#-quick-start) · [Screenshots](#-screenshots) · [Build for Android](#-build-for-android) · [Architecture](#-architecture) · [License](#-license)
-
-</div>
-
----
-
-## ✨ Why LANShare?
-
-Turn any folder into a shareable web library in **one tap**. No cloud, no accounts, no setup — everything stays on your local network.
-
-- 🚀 **Zero config** — pick a folder, hit start, share the link.
-- 🔒 **Private by design** — files never leave your Wi-Fi.
-- 🎨 **Beautiful UI** — responsive, light/dark, crafted for desktop *and* phone.
-- 🎬 **Rich previews** — images, video, audio, PDF, and text render in-browser.
-- 📱 **Works everywhere** — Android app + desktop builds from a single codebase.
+<p align="center">
+  <a href="https://github.com/mohammed-mahmoudzadeh/lanshare">
+    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
+  </a>
+  <a href="https://flet.dev">
+    <img src="https://img.shields.io/badge/UI-Flet-00B0FF?style=flat-square&logo=flutter&logoColor=white" alt="Flet">
+  </a>
+  <a href="https://flask.palletsprojects.com">
+    <img src="https://img.shields.io/badge/Server-Flask-000000?style=flat-square&logo=flask&logoColor=white" alt="Flask">
+  </a>
+  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20Linux%20%7C%20macOS-64748b?style=flat-square" alt="Platforms">
+  <a href="https://github.com/mohammed-mahmoudzadeh/lanshare/stargazers">
+    <img src="https://img.shields.io/github/stars/mohammed-mahmoudzadeh/lanshare?style=flat-square" alt="GitHub Stars">
+  </a>
+</p>
 
 ---
 
-## 🚀 Features
+## Why LANShare?
 
-| | Feature | Description |
-|---|---|---|
-| ⚡ | **One-tap server** | Start/stop from the app — no terminal required. |
-| 🧭 | **Adaptive layout** | Sidebar on desktop, bottom nav on mobile. |
-| 🌗 | **Light / Dark / Auto** | Full theme system, remembers your choice. |
-| 🖼️ | **Media previews** | Images, video, audio, PDF, and text open inline. |
-| 🏷️ | **Video quality badges** | Auto-detected via `mediainfo` / `ffprobe` (1080p · FHD, etc.). |
-| 🔍 | **Grid / List + Search** | Live filtering with instant view switching. |
-| 📲 | **QR code** | Scan to connect from any phone on the network. |
-| 🤖 | **Android-aware** | Storage permission handling + `MANAGE_EXTERNAL_STORAGE`. |
-| 🛑 | **Safe shutdown** | Auto-stops on window close or disconnect. |
-| 🔌 | **Interface selection** | Bind to Wi-Fi, hotspot, Ethernet, or all interfaces. |
+Moving files between devices shouldn't require uploading them to a cloud service or creating an account.
 
----
+LANShare runs a web server on your device and lets other devices on your local network access the files you choose to share. Open the generated address in a browser and browse your files directly.
 
-## 📸 Screenshots
+- **Local-first sharing** — serve files directly from your device over your local network.
+- **Two ways to run** — use the graphical application or launch the standalone CLI.
+- **Browser-based access** — access shared files from phones, tablets, and computers.
+- **Video streaming** — support HTTP Range requests for compatible playback and seeking.
+- **Live updates** — receive file-system changes through Server-Sent Events.
+- **Cross-platform foundation** — Flet provides the application UI, while Flask handles HTTP requests.
 
-<div align="center">
+## Features
 
-| Dashboard | Web UI |
-|:-:|:-:|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Web UI](docs/screenshots/webui.png) |
+### Application
 
-| Video Preview | Mobile |
-|:-:|:-:|
-| ![Video](docs/screenshots/video.png) | ![Mobile](docs/screenshots/mobile.png) |
+| Feature | Description |
+|---|---|
+| Dashboard | Manage the sharing server and its settings. |
+| Activity | Access the application's activity view. |
+| Settings | Configure available application preferences. |
+| Network discovery | Discover available IPv4 interfaces. |
+| Adaptive UI | Build the interface with reusable Flet components and centralized design tokens. |
 
-</div>
+### Web file browser
 
-> 💡 Add your screenshots to `docs/screenshots/` and update the paths above.
+| Feature | Description |
+|---|---|
+| Directory browsing | Navigate the shared directory tree. |
+| Recursive search | Find files across nested directories. |
+| Video streaming | Support HTTP Range requests for compatible clients. |
+| Thumbnails | Generate previews where supported. |
+| Live updates | Use Server-Sent Events (SSE) for file-system notifications. |
+| Modular frontend | Keep HTML, CSS, and JavaScript separate from Python routes. |
 
----
+### Headless CLI
 
-## 🏁 Quick Start
-
-### 1. Clone
+Run the file-sharing server directly from a terminal without launching the Flet interface.
 
 ```bash
-git clone https://github.com/<you>/lanshare.git
+lanshare --dir /path/to/folder
+```
+
+The CLI is useful for terminal-based workflows, lightweight deployments, and environments where a graphical interface is unnecessary.
+
+### Android integration
+
+- Android-specific storage permission handling.
+- Battery optimization exemption support.
+- Foreground service support.
+- Android build configuration managed through `pyproject.toml`.
+
+## Quick Start
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/mohammed-mahmoudzadeh/lanshare.git
 cd lanshare
 ```
 
-2. Set up a virtual environment
+### 2. Create a virtual environment
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate          # Linux / macOS
-# .venv\Scripts\activate           # Windows
 ```
 
-3. Install dependencies
+Activate it on Linux or macOS:
 
 ```bash
-pip install -r requirements.txt
+source .venv/bin/activate
 ```
 
-4. Run
+On Windows PowerShell:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+### 3. Install dependencies
 
 ```bash
-PYTHONPATH=src python -m lanshare.main
+python -m pip install -r requirements.txt
 ```
 
-On Windows:
+### 4. Launch the application
 
-```bat
-set PYTHONPATH=src
-python -m lanshare.main
+```bash
+python src/main.py
 ```
 
-Then:
+Once the application opens:
 
-1. Click Pick folder (or Share all on Android).
-2. Tap Start Server.
-3. Open the shown URL — or scan the QR code — from any device on your network.
+1. Select the folder you want to share.
+2. Configure the available server settings.
+3. Start the server.
+4. Open the displayed address on another device connected to the same local network.
 
----
+The exact launch command may differ if the project's configured entry point changes.
 
-🤖 Build for Android
+## CLI Usage
+
+LANShare includes a standalone Flask file-browser package with its own module entry point.
+
+### Run from source
+
+From the repository root:
+
+```bash
+PYTHONPATH=src python -m lanshare.core.share --dir /path/to/folder
+```
+
+Windows PowerShell:
+
+```powershell
+$env:PYTHONPATH = "src"
+python -m lanshare.core.share --dir "C:\path\to\folder"
+```
+
+### Run an installed command
+
+If the package's console entry point is configured and installed:
+
+```bash
+lanshare --dir ~/Documents
+```
+
+Windows:
+
+```powershell
+lanshare --dir "C:\Users\YourUser\Documents"
+```
+
+The server's actual bind address and port depend on the current CLI implementation and configuration. Use the address reported by the running process to connect from another device.
+
+### Bash completion
+
+The repository includes a Bash completion script:
+
+```text
+completion/lanshare
+```
+
+The configured installation process installs it to:
+
+```text
+/etc/bash_completion.d/lanshare
+```
+
+After installation, reload the Bash completion configuration or open a new shell.
+
+## Build for Android
+
+LANShare uses Flet's build tooling to package the application for Android.
+
+### Requirements
+
+- Flutter SDK
+- Android SDK and required build tools
+- Python dependencies from the project configuration
+
+### Build an APK
+
+Run the following command from the repository root:
 
 ```bash
 flet build apk --arch arm64-v8a
 ```
 
-Output: build/apk/app-release.apk
+The expected output path for the current configuration is:
 
-Requires the Flutter SDK and Android SDK. See the Flet build docs for details.
-
----
-
-🏗️ Architecture
-
-LANShare is split into a Flet UI shell and a Flask file server that runs in a background thread.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Flet UI (app shell)                  │
-│  ┌────────────┐  ┌────────────┐  ┌────────────┐             │
-│  │ Dashboard  │  │  Activity  │  │  Settings  │             │
-│  └────────────┘  └────────────┘  └────────────┘             │
-│                                                             │
-│         AppState ◄──────► Render loop (adaptive)            │
-└───────────────────────┬─────────────────────────────────────┘
-                        │ start() / stop()
-                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│                FlaskServer (daemon thread)                  │
-│         ThreadedWSGIServer(bind_host, port, app)            │
-└───────────────────────┬─────────────────────────────────────┘
-                        │
-                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   Flask web app (share.py)                  │
-│    browse() · previews · search · quality probing · QR      │
-└───────────────────────┬─────────────────────────────────────┘
-                        │ http://<LAN-IP>:<port>
-                        ▼
-              📱 Any device on your Wi-Fi
+```text
+build/apk/app-release.apk
 ```
 
-Request lifecycle
+Check the build output for the actual artifact location.
 
-1. Flet shell gathers interfaces via core/network.py and renders the UI.
-2. Tapping Start Server → FlaskServer.start() binds a ThreadedWSGIServer.
-3. A phone opens http://192.168.x.x:8000 → browse() renders the file list.
-4. File clicks stream via send_file(conditional=True) (supports range requests for video).
-5. Stop / window close / disconnect → shutdown() + server_close().
+Android permissions and application metadata are configured in `pyproject.toml`. Runtime storage permissions and relevant system settings must be handled on the target device.
 
----
+## Architecture
 
-📁 Project Layout
+LANShare separates the graphical interface from the HTTP file-sharing layer. Both the GUI and the standalone CLI use the Flask file-browser package.
 
+```text
+                         LANShare
+                            |
+              +-------------+-------------+
+              |                           |
+        Flet Application              Headless CLI
+              |                           |
+       +------+------+                    |
+       |      |      |                    |
+   Dashboard Activity Settings             |
+       |                                   |
+       +----------------+------------------+
+                        |
+                  Flask Server
+                        |
+                Flask File Browser
+                        |
+          +-------------+-------------+
+          |             |             |
+        Routes       File Access    Watcher
+          |             |             |
+      HTML / CSS / JS  Streaming    SSE Events
+                        |
+                 Local Network
+                        |
+               Web Browser Clients
 ```
+
+### Flet application layer
+
+The Flet shell manages the user interface, navigation, shared state, and rendering lifecycle.
+
+### Flask server layer
+
+The Flask server exposes the shared directory over HTTP. The `FlaskServer` wrapper manages the server lifecycle for the graphical application.
+
+### Web interface layer
+
+The browser interface is implemented with HTML templates, CSS, and JavaScript. Python modules handle routing, file access, streaming, thumbnails, and file-system monitoring.
+
+### Streaming and live updates
+
+HTTP Range requests allow compatible clients to request portions of a file, supporting video playback and seeking. Server-Sent Events provide a mechanism for notifying connected browsers about file-system changes.
+
+## Project Layout
+
+```text
 lanshare/
-├── pyproject.toml          # build config, Android permissions, icons
-├── requirements.txt        # pinned dependencies
-├── README.md
-├── LICENSE
-├── pip.conf                # mirror config (Aliyun + pypi.flet.dev)
+├── pyproject.toml
+├── requirements.txt
+├── completion/
+│   └── lanshare
 └── src/
-    ├── main.py             # entry point
-    ├── assets/             # icon, splash
+    ├── main.py
+    ├── assets/
+    │   └── icons and splash images
     └── lanshare/
-        ├── __init__.py
-        ├── app.py          # Flet app shell, splash, render loop
-        ├── config.py       # env flags & constants
-        ├── state.py        # AppState dataclass
-        ├── theme/          # design tokens (colors, typography, spacing)
-        ├── components/     # reusable UI primitives
-        ├── views/          # dashboard, activity, settings
+        ├── app.py
+        ├── state.py
+        ├── theme/
+        ├── components/
+        ├── views/
+        │   ├── dashboard
+        │   ├── activity
+        │   └── settings
         └── core/
-            ├── server.py       # FlaskServer wrapper
-            ├── share.py        # Flask file-browser app
-            ├── network.py      # IPv4 interface discovery
-            ├── permissions.py  # Android permission handling
-            ├── qr.py           # SVG QR + asset data URIs
-            └── fileinfo.py     # fast folder statistics
+            ├── server.py
+            ├── network.py
+            ├── share/
+            │   ├── __main__.py
+            │   ├── templates/
+            │   │   └── index.html
+            │   ├── static/
+            │   │   ├── styles.css
+            │   │   └── app.js
+            │   └── ...
+            └── ...
 ```
 
----
+| Path | Responsibility |
+|---|---|
+| `pyproject.toml` | Build configuration, application metadata, dependencies, and Android settings. |
+| `requirements.txt` | Pinned Python dependencies. |
+| `completion/lanshare` | Bash CLI completion definitions. |
+| `src/main.py` | Application entry point. |
+| `src/assets/` | Icons and splash-screen assets. |
+| `src/lanshare/app.py` | Flet application shell and rendering lifecycle. |
+| `src/lanshare/state.py` | Shared application state. |
+| `src/lanshare/theme/` | Colors, typography, and spacing tokens. |
+| `src/lanshare/components/` | Reusable UI components. |
+| `src/lanshare/views/` | Dashboard, Activity, and Settings views. |
+| `src/lanshare/core/server.py` | Flask server lifecycle wrapper. |
+| `src/lanshare/core/network.py` | IPv4 interface discovery. |
+| `src/lanshare/core/share/` | Flask routes, browser templates, static assets, file access, streaming, thumbnails, and file-system monitoring. |
 
-🧰 Tech Stack
+## Configuration
 
-Layer Technology
-UI framework Flet 1.0.4 (Flutter under the hood)
-Web server Flask 3.x + Werkzeug
-QR generation qrcode (SVG backend)
-Network discovery ifaddr (desktop), pyjnius (Android)
-Video probing mediainfo / ffprobe (optional)
-Packaging flet build apk
+### Network interfaces
 
----
+LANShare discovers IPv4 interfaces that can be used for sharing.
 
-⚙️ Configuration
+| Bind address | Behavior |
+|---|---|
+| `0.0.0.0` | Listen on all IPv4 interfaces. |
+| A specific LAN address | Listen on a selected network interface. |
+| A hotspot address | Allow connections through the hotspot interface when supported by the device and configuration. |
 
-Ports
+Choose an address that is reachable from the client device. Firewall rules and network isolation settings may affect connectivity.
 
-Default port is 8000. Change it on the Dashboard (valid range: 1024–65535).
+### Port
 
-Interfaces
+The previous application configuration uses port `8000` as the default. Confirm the current implementation if the default has changed.
 
-The Dashboard dropdown lists every detected IPv4 interface:
+Choose an available TCP port supported by the application. The GUI provides port configuration where implemented.
 
-Label Example Notes
-All Interfaces 0.0.0.0 Default — reachable on any network
-Wi-Fi 192.168.1.42 Bind to a specific Wi-Fi adapter
-Hotspot 192.168.43.1 Android tethering
-Ethernet 10.0.0.5 Wired LAN
+### Shared directory
 
-Android permissions
+The selected directory is the root of the web file browser.
 
-Declared in pyproject.toml:
-
-```toml
-[tool.flet.android.permission]
-"android.permission.INTERNET" = true
-"android.permission.ACCESS_NETWORK_STATE" = true
-"android.permission.ACCESS_WIFI_STATE" = true
-"android.permission.READ_MEDIA_IMAGES" = true
-"android.permission.READ_MEDIA_VIDEO" = true
-"android.permission.READ_MEDIA_AUDIO" = true
-"android.permission.MANAGE_EXTERNAL_STORAGE" = true
-```
-
-Use the in-app Permissions button to grant storage access.
-
----
-
-❓ FAQ
-
-<details>
-<summary><b>Other devices can't connect — what's wrong?</b></summary>
-
-1. Make sure both devices are on the same Wi-Fi network.
-2. Check that the server is Online (green chip).
-3. Some routers block client-to-client traffic (AP isolation) — disable it.
-4. On Windows, allow Python through the firewall on first run.
-5. Try binding to a specific interface instead of 0.0.0.0.
-
-</details>
-
-<details>
-<summary><b>Videos won't play in the browser.</b></summary>
-
-Browsers support a limited set of codecs. mp4 (H.264/AAC) and webm (VP8/VP9) are the safest.
-For .mkv / .mov, LANShare serves them with a compatible MIME type, but playback depends on the browser.
-
-</details>
-
-<details>
-<summary><b>Quality badges don't appear.</b></summary>
-
-Video quality requires mediainfo or ffprobe to be installed and on your PATH:
+For CLI usage:
 
 ```bash
-# Debian / Ubuntu
-sudo apt install mediainfo
-
-# macOS
-brew install mediainfo
-
-# Windows
-winget install MediaInfo.MediaInfo
+lanshare --dir /path/to/folder
 ```
 
-</details>
+The process must have permission to read the selected files and traverse the relevant directories.
 
-<details>
-<summary><b>Port 8000 is busy.</b></summary>
+### Android permissions
 
-Change the port in the Dashboard (e.g. 8080, 9000) and start again.
+Android-specific settings are managed through `pyproject.toml` and the application's permission-handling code.
 
-</details>
+Depending on the device and Android version, LANShare may require network access, storage permissions, and appropriate background-execution settings. Grant runtime permissions and system exemptions when prompted.
 
-<details>
-<summary><b>Can I use this over the internet?</b></summary>
+### Dependencies
 
-LANShare is designed for local networks only. Exposing it publicly requires a reverse proxy, TLS, and authentication — none of which are built in.
+Python dependencies are declared in `requirements.txt` and the project configuration. Install them in the active virtual environment when developing from source.
 
-</details>
+Optional media-inspection tools, if used by the current implementation, must be installed separately and made available on the system `PATH`.
 
----
+## Security Considerations
 
-🗺️ Roadmap
+LANShare is designed for local-network file sharing, not unrestricted public exposure.
 
-☐ Upload support from the web UI
-☐ Multi-folder sharing
-☐ Optional basic authentication
-☐ File rename / delete actions
-☐ PWA install for the web UI
-☐ Desktop installers (.exe, .dmg, .AppImage)
+- Share only directories intended to be accessible over the network.
+- Bind to a specific interface when listening on all interfaces is unnecessary.
+- Restrict access through host firewall rules when appropriate.
+- Avoid exposing the server directly to the public internet without reviewing authentication, authorization, transport security, and deployment requirements.
+
+Actual access controls depend on the current server implementation and configuration.
 
 ---
 
-🤝 Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repo and create a feature branch: git checkout -b feat/my-feature
-2. Follow existing code style (PEP 8, type hints where useful).
-3. Keep UI changes consistent with the design tokens in theme/.
-4. Open a PR with a clear description and screenshots if applicable.
-
----
-
-🐛 Reporting Bugs
-
-When filing an issue, please include:
-
-· OS + version (Android / Linux / Windows / macOS)
-· Python version (python --version)
-· Flet version (pip show flet)
-· Steps to reproduce
-· Relevant logs from the Activity tab
-
----
-
-📄 License
-
-This project is licensed under the MIT License — see LICENSE for details.
-
-You are free to use, modify, and distribute it, including for commercial purposes, as long as the copyright notice is preserved.
-
----
-
-<div align="center">
-
-Built with Flet + Flask
-
-⭐ If LANShare is useful to you, consider giving it a star — it helps others find it.
-
-⬆ Back to top
-
-</div>
-
+<p align="center">
+  <a href="https://github.com/mohammed-mahmoudzadeh/lanshare">GitHub Repository</a>
+</p>

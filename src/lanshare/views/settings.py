@@ -91,9 +91,19 @@ def build_settings(P, state, handlers, page_width=1200):
     device_field = TextInput(
         P, hint="Device name", value="My Phone", width=220,
     )
+    if state.server_running:
+        device_field.disabled = True
+        device_field.bgcolor = P["surface"]
+        device_field.color = P["text_muted"]
+
     default_port_field = TextInput(
         P, hint="8000", value=state.port or "8000", width=140,
+        on_change=lambda e: handlers["set_port"](e.control.value),
     )
+    if state.server_running:
+        default_port_field.disabled = True
+        default_port_field.bgcolor = P["surface"]
+        default_port_field.color = P["text_muted"]
 
     server_card = SectionCard(
         P, dark=state.dark,

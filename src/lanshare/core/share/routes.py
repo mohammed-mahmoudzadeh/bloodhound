@@ -6,18 +6,20 @@ import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from flask import Flask, abort, render_template_string, request, url_for
+from flask import (
+    Flask, abort, render_template, request, url_for,
+)
 
 from .access_log import register_access_log
 from .config import (
     THUMB_BUDGET_PER_PAGE, PREVIEW_VIDEO,
-    get_port, get_share_dir,
+    get_share_dir,
 )
 from .files import serve_file
 from .icons import ICON_SVG
 from .probe import probe_video_path
 from .search import api_search_route
-from .template import FAVICON_SVG, TEMPLATE
+from .template import FAVICON_SVG
 from .thumbs import get_or_create_thumb, serve_thumb_route
 from .utils import get_ext, get_icon_key, human_size, preview_kind, safe_path
 from .watcher import sse_route
@@ -130,15 +132,16 @@ def register_routes(app: Flask) -> None:
         if subpath:
             parent = os.path.dirname(subpath.rstrip("/"))
 
-        return render_template_string(
-            TEMPLATE.replace("__FAVICON__", FAVICON_SVG),
+        return render_template(
+            "index.html",
             items=items,
             parent=parent,
             count=len(items),
             total_size=human_size(total) if total else "0 B",
             display_path=str(target),
-            port=get_port(),
+            host=request.host,
             icons=ICON_SVG,
+            favicon=FAVICON_SVG,
         )
 
     @app.route("/thumb/<name>")
