@@ -6,9 +6,6 @@ LANShare is a cross-platform file-sharing application that turns a folder on you
 
 Built with **Python, Flet, and Flask**, it combines a native-style application interface with a lightweight web server, plus a standalone CLI for headless environments.
 
-<p align="center">
-  <a href="https://github.com/mohammed-mahmoudzadeh/lanshare">View Repository</a>
-</p>
 
 <p align="center">
   <a href="https://github.com/mohammed-mahmoudzadeh/lanshare">
@@ -18,7 +15,7 @@ Built with **Python, Flet, and Flask**, it combines a native-style application i
     <img src="https://img.shields.io/badge/UI-Flet-00B0FF?style=flat-square&logo=flutter&logoColor=white" alt="Flet">
   </a>
   <a href="https://flask.palletsprojects.com">
-    <img src="https://img.shields.io/badge/Server-Flask-000000?style=flat-square&logo=flask&logoColor=white" alt="Flask">
+    <img src="https://img.shields.io/badge/Server-Flask-3BABC3?style=flat-square&logo=flask&logoColor=white" alt="Flask">
   </a>
   <img src="https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20Linux%20%7C%20macOS-64748b?style=flat-square" alt="Platforms">
   <a href="https://github.com/mohammed-mahmoudzadeh/lanshare/stargazers">
@@ -215,12 +212,12 @@ LANShare separates the graphical interface from the HTTP file-sharing layer. Bot
 ```text
                          LANShare
                             |
-              +-------------+-------------+
-              |                           |
+              +-------------+--------------+
+              |                            |
         Flet Application              Headless CLI
-              |                           |
-       +------+------+                    |
-       |      |      |                    |
+              |                            |
+       +------+------+                     |
+       |      |      |                  ‌   |
    Dashboard Activity Settings             |
        |                                   |
        +----------------+------------------+
@@ -363,7 +360,3 @@ LANShare is designed for local-network file sharing, not unrestricted public exp
 Actual access controls depend on the current server implementation and configuration.
 
 ---
-
-<p align="center">
-  <a href="https://github.com/mohammed-mahmoudzadeh/lanshare">GitHub Repository</a>
-</p>
