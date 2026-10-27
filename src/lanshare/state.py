@@ -25,6 +25,7 @@ class AppState:
     server_running: bool = False
     share_dir: str = ""
     port: str = "8000"
+    device_name: str = "My Phone"
 
     # Interfaces
     interfaces: List[Tuple[str, str]] = field(default_factory=list)

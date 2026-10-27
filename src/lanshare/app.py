@@ -20,6 +20,7 @@ from .config import (
     WINDOW_MIN_HEIGHT,
 )
 from .state import AppState
+from .settings_store import load_settings, save_settings
 from .theme import BP, Space, Radius, build_palette
 from .components import (
     AppBar, NavBar, NavSidebar, StatusChip, IconActionButton,
@@ -71,13 +72,18 @@ def main(page: Page):
     # Initialize state and server
     # ============================================================
     state = AppState()
-    server = FlaskServer(port=8000)
+    settings_load_error: Exception | None = None
+    try:
+        load_settings(state)
+    except (OSError, ValueError) as ex:
+        settings_load_error = ex
+    server = FlaskServer(port=int(state.port))
 
     # ============================================================
     # Theme holder
     # ============================================================
     theme_holder = {
-        "mode": "auto",
+        "mode": state.theme_mode,
         "system_dark": _system_is_dark(page),
         "P": None,
     }
@@ -193,6 +199,15 @@ def main(page: Page):
     def log(message: str, level: str = "info"):
         state.add_log(_now(), message, level)
 
+    def persist_settings():
+        try:
+            save_settings(state)
+        except OSError as ex:
+            log(f"Could not save settings: {ex}", "err")
+
+    if settings_load_error is not None:
+        log(f"Could not load saved settings: {settings_load_error}", "err")
+
     def shutdown_server():
         try:
             if server.is_alive():
@@ -227,6 +242,7 @@ def main(page: Page):
             except Exception: continue
 
     def on_close(e=None):
+        persist_settings()
         shutdown_server()
         try: page.run_task(_close_window_async)
         except Exception:
@@ -263,6 +279,7 @@ def main(page: Page):
         state.theme_mode = mode
         refresh_palette()
         page.theme_mode = ft.ThemeMode.DARK if current_dark() else ft.ThemeMode.LIGHT
+        persist_settings()
         render()
 
     def cycle_theme(e=None):
@@ -333,6 +350,7 @@ def main(page: Page):
         state.iface_label = label
         state.iface_ip = ip
         state.iface_picked = True
+        persist_settings()
         log(f"Selected interface: {label} · {ip}", "info")
         if server.is_alive():
             log("Restarting server on new interface…", "warn")
@@ -424,6 +442,7 @@ def main(page: Page):
                 server.stop()
                 state.server_running = False
             state.share_dir = str(p)
+            persist_settings()
             log(f"Folder: {p}", "ok")
             render()
         except Exception as ex: log(f"Error: {ex}", "err")
@@ -600,12 +619,17 @@ def main(page: Page):
             port_int = int(value)
             if 1024 <= port_int <= 65535:
                 state.port = value
+                persist_settings()
             else:
                 # Keep old value if out of range (don't update state)
                 pass
         except (ValueError, TypeError):
             # Keep old value if not a valid number
             pass
+
+    def set_device_name(value: str):
+        state.device_name = value
+        persist_settings()
 
     handlers: Dict[str, Callable] = {
         "log": log, "cycle_theme": cycle_theme, "set_theme": set_theme,
@@ -616,6 +640,7 @@ def main(page: Page):
         "open_url": lambda: run_async(open_url, None), "show_qr": lambda: run_async(show_qr, None),
         "on_iface_change": on_iface_change,
         "set_port": set_port,  # NEW
+        "set_device_name": set_device_name,
     }
 
     appbar_holder = ft.Container()
@@ -678,6 +703,7 @@ def main(page: Page):
     def on_disconnect(e=None):
         try: log("Session ended — stopping server.", "info")
         except Exception: pass
+        persist_settings()
         shutdown_server()
         try: safe_update()
         except Exception: pass

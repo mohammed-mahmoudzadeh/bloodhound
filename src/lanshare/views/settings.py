@@ -89,7 +89,8 @@ def build_settings(P, state, handlers, page_width=1200):
 
     # ---- Server ----
     device_field = TextInput(
-        P, hint="Device name", value="My Phone", width=220,
+        P, hint="Device name", value=state.device_name, width=220,
+        on_change=lambda e: handlers["set_device_name"](e.control.value or ""),
     )
     if state.server_running:
         device_field.disabled = True
