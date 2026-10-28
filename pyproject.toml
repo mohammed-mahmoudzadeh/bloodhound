@@ -1,5 +1,5 @@
 [project]
-name = "lanshare"
+name = "bloodhound"
 version = "1.0.0"
 description = "Share files over your local network — Android & desktop"
 license = "MIT"
@@ -25,7 +25,7 @@ android = [
 ]
 
 [project.scripts]
-lanshare = "lanshare.core.share.__main__:main"
+bloodhound = "bloodhound.core.share.__main__:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
@@ -38,16 +38,16 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"lanshare.core.share" = ["templates/*.html", "static/*.css", "static/*.js"]
+"bloodhound.core.share" = ["templates/*.html", "static/*.css", "static/*.js"]
 
 [tool.setuptools.data-files]
-"/etc/bash_completion.d" = ["completion/lanshare"]
+"/etc/bash_completion.d" = ["completion/bloodhound"]
 
 [tool.flet]
-org = "org.lanshare"
-product = "LANShare"
-company = "LANShare"
-copyright = "Copyright (C) 2026 LANShare"
+org = "org.bloodhound"
+product = "BloodHound"
+company = "BloodHound"
+copyright = "Copyright (C) 2026 BloodHound"
 
 [tool.flet.app]
 path = "src"

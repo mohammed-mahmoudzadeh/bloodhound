@@ -141,7 +141,6 @@ def register_routes(app: Flask) -> None:
             display_path=str(target),
             host=request.host,
             icons=ICON_SVG,
-            favicon=FAVICON_SVG,
         )
 
     @app.route("/thumb/<name>")

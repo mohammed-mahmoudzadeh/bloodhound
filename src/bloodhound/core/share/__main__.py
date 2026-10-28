@@ -1,4 +1,4 @@
-"""Standalone CLI entry point for the LANShare Flask server."""
+"""Standalone CLI entry point for the BloodHound Flask server."""
 from __future__ import annotations
 
 import argparse
@@ -114,8 +114,8 @@ def _print_banner_plain(share_dir: Path, host: str, port: int) -> None:
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="lanshare",
-        description="Run the LANShare Flask server standalone (without Flet UI).",
+        prog="bloodhound",
+        description="Run the BloodHound Flask server standalone (without Flet UI).",
         formatter_class=argparse.RawTextHelpFormatter
     )
     

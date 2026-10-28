@@ -1,9 +1,9 @@
-"""LANShare — Flet entry point."""
+"""BloodHound — Flet entry point."""
 from __future__ import annotations
 
 import flet as ft
 
-from lanshare.app import main
+from bloodhound.app import main
 
 
 if __name__ == "__main__":

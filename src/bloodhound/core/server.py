@@ -48,7 +48,7 @@ class FlaskServer:
         self.thread = threading.Thread(
             target=self._srv.serve_forever,
             daemon=True,
-            name="lanshare-flask",
+            name="bloodhound-flask",
         )
         self.thread.start()
         self.running = True

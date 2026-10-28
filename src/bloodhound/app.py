@@ -6,6 +6,7 @@ import os
 import signal
 import threading
 import time
+import urllib.parse
 from pathlib import Path
 from typing import Callable, Dict
 
@@ -107,51 +108,109 @@ def main(page: Page):
     refresh_palette()
 
     # ============================================================
-    # Build the real splash with theme-aware colors
+    # Locate Assets
+    # ============================================================
+    _here = Path(__file__).resolve()
+    _asset_candidates = [
+        _here.parent.parent / "assets",       # src/assets
+        _here.parent.parent.parent / "assets",# root/assets
+        Path.cwd() / "assets",
+        Path.cwd() / "src" / "assets",
+    ]
+    
+    assets_dir = None
+    for _p in _asset_candidates:
+        if _p.is_dir() and (_p / "logo_dark.png").exists():
+            assets_dir = _p
+            break
+
+    def _get_logo_src() -> str | None:
+        if not assets_dir:
+            return None
+        logo_filename = "logo_dark.png" if current_dark() else "logo_light.png"
+        return str(assets_dir / logo_filename)
+
+    # ============================================================
+    # Build the real splash (Polished Design)
     # ============================================================
     p = P()
-    
-    splash_icon_path = None
-    _here = Path(__file__).resolve()
-    # Updated paths to look directly inside "assets" (no "images" subfolder)
-    _icon_candidates = [
-        _here.parent.parent.parent / "assets" / "icon.png",
-        _here.parent.parent / "assets" / "icon.png",
-        Path.cwd() / "assets" / "icon.png",
-        Path.cwd() / "src" / "assets" / "icon.png",
-    ]
-    for _p in _icon_candidates:
-        if _p.is_file():
-            splash_icon_path = str(_p)
-            break
-    
-    if splash_icon_path is None:
-        try:
-            from .core.qr import image_as_data_uri
-            data_uri = image_as_data_uri("icon.png")
-            if data_uri:
-                splash_icon_path = data_uri
-        except Exception:
-            splash_icon_path = None
-    
-    if splash_icon_path is not None:
-        splash_icon = ft.Image(src=splash_icon_path, width=140, height=140)
+    splash_icon_src = _get_logo_src()
+
+    if splash_icon_src:
+        splash_icon = ft.Image(
+            src=splash_icon_src, 
+            width=160, 
+            height=160, 
+            fit=ft.BoxFit.CONTAIN
+        )
     else:
-        splash_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=120, color=p["primary"])
+        splash_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=160, color=p["primary"])
+
+    # Split brand name into two distinct parts
+    brand_text = ft.Row(
+        [
+            ft.Text(
+                "Blood",
+                size=32,
+                weight=ft.FontWeight.W_400,
+                color=p["text_muted"],
+                font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
+            ),
+            ft.Text(
+                "Hound",
+                size=32,
+                weight=ft.FontWeight.W_800,
+                color=p["text"],
+                font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
+                style=ft.TextStyle(letter_spacing=2),
+            )
+        ],
+        spacing=0,
+        alignment=ft.MainAxisAlignment.CENTER,
+        tight=True
+    )
+
+    subtitle_text = ft.Text(
+        "Share files over your local network",
+        size=15,
+        color=p["text_muted"],
+        weight=ft.FontWeight.W_400,
+        text_align=ft.TextAlign.CENTER,
+        style=ft.TextStyle(letter_spacing=0.5),
+    )
+
+    dot1 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=0.3)
+    dot2 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=0.6)
+    dot3 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=1.0)
+
+    loading_dots = ft.Row(
+        [dot1, dot2, dot3],
+        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=8,
+        height=20,
+        tight=True
+    )
 
     splash_layer = ft.Container(
         content=ft.Column(
             [
+                ft.Container(expand=True), 
                 splash_icon,
-                ft.Container(height=20),
-                ft.Text("LANShare", size=32, weight=ft.FontWeight.W_700, color=p["text"]),
-                ft.Container(height=6),
-                ft.Text("Share files over your local network", size=14, color=p["text_muted"]),
+                ft.Container(height=24),   
+                brand_text,
+                ft.Container(height=8),    
+                subtitle_text,
+                ft.Container(expand=True), 
+                loading_dots,
+                ft.Container(height=48),   
             ],
-            spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=0,
+            tight=True,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,
         ),
         bgcolor=p["bg"],
-        alignment=ft.Alignment.CENTER, 
+        alignment=ft.Alignment.CENTER,
         expand=True,
     )
 
@@ -296,18 +355,10 @@ def main(page: Page):
 
     # Network & Server logic
     def _pick_default_index(interfaces):
-        # Priority 1: 192.168.*.* (typical home Wi-Fi)
         for i, (_, ip) in enumerate(interfaces):
-            if ip.startswith("192.168."):
-                return i
-        # Priority 2: 127.0.0.1 (localhost)
+            if ip.startswith("192.168."): return i
         for i, (_, ip) in enumerate(interfaces):
-            if ip == "127.0.0.1":
-                return i
-        # Fallback: 0.0.0.0 (All Interfaces)
-        # for i, (_, ip) in enumerate(interfaces):
-        #     if ip == "0.0.0.0":
-        #         return i
+            if ip == "127.0.0.1": return i
         return 0
 
     def _find_index_for_ip(interfaces, target_ip):
@@ -511,7 +562,7 @@ def main(page: Page):
             return
         ok = open_battery_optimization_dialog()
         if not ok:
-            log("Could not open battery settings. Please enable it manually in Settings > Apps > LANShare > Battery.", "warn")
+            log("Could not open battery settings. Please enable it manually in Settings > Apps > BloodHound > Battery.", "warn")
             render()
             return
         log("Battery settings opened. Waiting for your choice...", "info")
@@ -568,7 +619,6 @@ def main(page: Page):
         except Exception: pass
         qr_image = ft.Image(**img_kwargs)
         
-        # Only the QR container has a border
         qr_card = ft.Container(
             content=qr_image,
             padding=ft.Padding.all(12),
@@ -587,13 +637,12 @@ def main(page: Page):
             qr_card,
         ], spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
         
-        # Simple dialog content, no extra border on the dialog itself
         dialog_kwargs = {
             "content": ft.Container(
                 content=dialog_content, 
                 padding=ft.Padding.all(Space.md)
             ),
-            "bgcolor": p["surface_2"],  # Changed to surface_2 for better contrast
+            "bgcolor": p["surface_2"],
             "modal": True,
             "on_dismiss": _close_qr,
         }
@@ -614,17 +663,14 @@ def main(page: Page):
         render()
 
     def set_port(value: str):
-        """Validate and update the port in state."""
         try:
             port_int = int(value)
             if 1024 <= port_int <= 65535:
                 state.port = value
                 persist_settings()
             else:
-                # Keep old value if out of range (don't update state)
                 pass
         except (ValueError, TypeError):
-            # Keep old value if not a valid number
             pass
 
     def set_device_name(value: str):
@@ -639,7 +685,7 @@ def main(page: Page):
         "refresh_ip": refresh_ip, "copy_url": lambda: run_async(copy_url, None),
         "open_url": lambda: run_async(open_url, None), "show_qr": lambda: run_async(show_qr, None),
         "on_iface_change": on_iface_change,
-        "set_port": set_port,  # NEW
+        "set_port": set_port,
         "set_device_name": set_device_name,
     }
 
@@ -657,21 +703,64 @@ def main(page: Page):
     def render():
         p = P()
         page.bgcolor = p["bg"]
-        
-        # Ensure Flutter widgets follow our theme dynamically
         page.theme_mode = ft.ThemeMode.DARK if current_dark() else ft.ThemeMode.LIGHT
 
         wide = (page.width or 0) >= BP.md
         theme_icon, theme_tooltip = _theme_icon()
-        brand_logo = ft.Container(content=ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=22, color=p["text"]), width=40, height=40, bgcolor=p["surface_2"], border=ft.Border.all(1, p["border"]), border_radius=Radius.lg, alignment=ft.Alignment.CENTER)
-        brand_column = ft.Column([ft.Text("LANShare", size=17, weight=ft.FontWeight.W_700, color=p["text"]), ft.Text("File server", size=12, color=p["text_muted"])], spacing=2, tight=True)
+        
+        # --- Use the Logo Image in the App Header ---
+        logo_src = _get_logo_src()
+        if logo_src:
+            logo_bg = p["surface_2"] if current_dark() else "#ffffff"
+            
+            brand_logo = ft.Container(
+                content=ft.Image(
+                    src=logo_src, 
+                    width=28, 
+                    height=28, 
+                    fit=ft.BoxFit.CONTAIN
+                ),
+                width=42, height=42, 
+                bgcolor=logo_bg, 
+                border=ft.Border.all(1, p["border"]), 
+                border_radius=Radius.md, 
+                alignment=ft.Alignment.CENTER,
+                padding=ft.Padding.all(4) 
+            )
+        else:
+            brand_logo = ft.Container(
+                content=ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=22, color=p["text"]), 
+                width=42, height=42, 
+                bgcolor=p["surface_2"], 
+                border=ft.Border.all(1, p["border"]), 
+                border_radius=Radius.md, 
+                alignment=ft.Alignment.CENTER
+            )
+
+        brand_column = ft.Column(
+            [
+                ft.Row(
+                    [
+                        ft.Text("Blood", size=17, weight=ft.FontWeight.W_400, color=p["text_muted"]),
+                        ft.Text("Hound", size=17, weight=ft.FontWeight.W_700, color=p["text"]),
+                    ],
+                    spacing=0,
+                    tight=True
+                ),
+                ft.Text("File server", size=12, color=p["text_muted"])
+            ], 
+            spacing=2, tight=True
+        )
+        
         status_tone = "online" if state.server_running else "offline"
+        
         if wide:
             drag_region = ft.WindowDragArea(content=ft.Container(content=ft.Row([brand_logo, ft.Container(width=Space.sm + 4), brand_column, ft.Container(expand=True)], spacing=0, vertical_alignment=ft.CrossAxisAlignment.CENTER, tight=False), expand=True), expand=True, maximizable=True)
             controls_row = ft.Row([IconActionButton(p, icon=theme_icon, on_click=cycle_theme, tooltip=theme_tooltip), ft.Container(width=Space.sm), StatusChip(p, "Online" if state.server_running else "Offline", status_tone), ft.Container(width=Space.md), _window_controls()], spacing=0, vertical_alignment=ft.CrossAxisAlignment.CENTER, tight=True)
             appbar_holder.content = ft.Container(content=ft.Row([drag_region, controls_row], spacing=0, vertical_alignment=ft.CrossAxisAlignment.CENTER), padding=ft.Padding.symmetric(horizontal=Space.lg, vertical=Space.md), border=ft.Border.only(bottom=ft.BorderSide(1, p["border"])), bgcolor=p["bg"])
         else:
-            appbar_holder.content = AppBar(p, title="LANShare", subtitle="File server", trailing=[IconActionButton(p, icon=theme_icon, on_click=cycle_theme, tooltip=theme_tooltip), ft.Container(width=Space.sm), StatusChip(p, "Online" if state.server_running else "Offline", status_tone)])
+            appbar_holder.content = AppBar(p, title="BloodHound", subtitle="File server", trailing=[IconActionButton(p, icon=theme_icon, on_click=cycle_theme, tooltip=theme_tooltip), ft.Container(width=Space.sm), StatusChip(p, "Online" if state.server_running else "Offline", status_tone)])
+        
         appbar_holder.visible = True
         body = build_view(state.view, p, state, handlers, page_width=page.width or 1200)
         body_scroll.controls.clear()
@@ -728,16 +817,40 @@ def main(page: Page):
     refresh_ip()
     page.update()
 
-    # Remove splash after a delay to let the UI settle
     async def _remove_splash_async():
         import asyncio
+        
+        async def _animate_dots():
+            try:
+                while not splash_state["removed"]:
+                    dot1.opacity, dot2.opacity, dot3.opacity = 1.0, 0.3, 0.3
+                    dot1.update(), dot2.update(), dot3.update()
+                    await asyncio.sleep(0.2)
+                    if splash_state["removed"]: break
+                    
+                    dot1.opacity, dot2.opacity, dot3.opacity = 0.3, 1.0, 0.3
+                    dot1.update(), dot2.update(), dot3.update()
+                    await asyncio.sleep(0.2)
+                    if splash_state["removed"]: break
+                    
+                    dot1.opacity, dot2.opacity, dot3.opacity = 0.3, 0.3, 1.0
+                    dot1.update(), dot2.update(), dot3.update()
+                    await asyncio.sleep(0.2)
+            except Exception:
+                pass
+
+        dot_task = asyncio.create_task(_animate_dots())
         await asyncio.sleep(4.0)
+        
         if not splash_state["removed"]:
             splash_state["removed"] = True
+            try: await dot_task 
+            except Exception: pass
             try:
                 page.overlay.clear()
                 page.update()
             except Exception: pass
+            
         try:
             w = page.window.width or WINDOW_DEFAULT_WIDTH
             h = page.window.height or WINDOW_DEFAULT_HEIGHT
@@ -751,7 +864,9 @@ def main(page: Page):
                 page.update()
                 await asyncio.sleep(0.05)
         except Exception: pass
-    try: page.run_task(_remove_splash_async)
+        
+    try: 
+        page.run_task(_remove_splash_async)
     except Exception:
         def _fallback():
             time.sleep(4.0)
@@ -763,12 +878,11 @@ def main(page: Page):
 
 
 def _configure_page(page: ft.Page):
-    page.title = "LANShare"
+    page.title = "BloodHound"
     page.padding = 0
     page.bgcolor = "#000000"
     page.theme_mode = ft.ThemeMode.DARK
 
-    # Light theme with proper NavigationBar colors
     page.theme = ft.Theme(
         font_family="Inter",
         color_scheme=ft.ColorScheme(
@@ -782,7 +896,6 @@ def _configure_page(page: ft.Page):
         ),
     )
 
-    # Dark theme with proper NavigationBar colors
     page.dark_theme = ft.Theme(
         font_family="Inter",
         color_scheme=ft.ColorScheme(

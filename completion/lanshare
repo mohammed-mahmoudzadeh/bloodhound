@@ -1,6 +1,0 @@
-# Bash completion for lanshare
-# This file is installed to /etc/bash_completion.d/lanshare
-
-if command -v register-python-argcomplete &> /dev/null; then
-    eval "$(register-python-argcomplete lanshare)"
-fi

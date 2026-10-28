@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import flet as ft
+from pathlib import Path
 
 from ..theme import Space, Radius, Type
 from ..components import (
@@ -130,6 +131,22 @@ def build_settings(P, state, handlers, page_width=1200):
     )
 
     # ---- About ----
+    # Use logo image in the About section
+    _here = Path(__file__).resolve()
+    _asset_candidates = [
+        _here.parent.parent.parent / "assets",
+        _here.parent.parent.parent.parent / "assets",
+        Path.cwd() / "assets",
+        Path.cwd() / "src" / "assets",
+    ]
+    assets_dir = next((p for p in _asset_candidates if p.is_dir() and (p / "logo_dark.png").exists()), None)
+    
+    if assets_dir:
+        logo_filename = "logo_dark.png" if state.dark else "logo_light.png"
+        about_icon = ft.Image(src=str(assets_dir / logo_filename), width=24, height=24, fit=ft.BoxFit.CONTAIN)
+    else:
+        about_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=24, color=P["text_muted"])
+
     about_card = SectionCard(
         P, dark=state.dark,
         title="About",
@@ -137,9 +154,9 @@ def build_settings(P, state, handlers, page_width=1200):
             [
                 _row_setting(
                     P,
-                    "LANShare",
+                    "BloodHound",
                     "Version 1.0.0 — Local file sharing.",
-                    ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=24, color=P["text_muted"]),
+                    about_icon,
                 ),
                 _divider(P),
                 _row_setting(
