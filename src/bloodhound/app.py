@@ -3,11 +3,10 @@ from __future__ import annotations
 
 import atexit
 import asyncio
+import json
 import os
-import signal
 import threading
 import time
-import urllib.parse
 from pathlib import Path
 from typing import Callable, Dict, Any
 
@@ -26,15 +25,65 @@ from .settings_store import load_settings, save_settings
 from .theme import BP, Space, Radius, build_palette
 from .components import (
     AppBar, NavBar, NavSidebar, StatusChip, IconActionButton,
-    SecondaryButton,
 )
-from .core.network import get_all_ips, get_primary_ip
+from .core.network import get_all_ips
 from .core.server import FlaskServer
 from .views import build_view
 
 
 def run():
     ft.run(main)
+
+
+# ============================================================
+# Splash launch tracker — controls first-run vs. subsequent-run
+# ============================================================
+def _launch_counter_path() -> Path:
+    """Return the path to the small JSON file tracking daily launches."""
+    base = Path.home() / ".cache" / "bloodhound"
+    try:
+        flet_data = os.environ.get("FLET_APP_STORAGE_DATA")
+        if flet_data:
+            base = Path(flet_data)
+    except Exception:
+        pass
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    return base / "launch_counter.json"
+
+
+def _is_first_launch_today() -> bool:
+    """Return True if the app has not been launched yet today."""
+    path = _launch_counter_path()
+    today = time.strftime("%Y-%m-%d")
+    data: dict = {}
+    try:
+        if path.is_file():
+            data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        data = {}
+
+    last_day = data.get("day")
+    count = int(data.get("count", 0))
+
+    # New day → first launch of the day.
+    if last_day != today:
+        data = {"day": today, "count": 1}
+        try:
+            path.write_text(json.dumps(data), encoding="utf-8")
+        except Exception:
+            pass
+        return True
+
+    # Same day → increment and return False.
+    data["count"] = count + 1
+    try:
+        path.write_text(json.dumps(data), encoding="utf-8")
+    except Exception:
+        pass
+    return False
 
 
 def main(page: Page):
@@ -54,9 +103,14 @@ def main(page: Page):
     _configure_page(page)
 
     # ============================================================
-    # Early Splash
+    # Splash: initial color matches the system theme to avoid flash
     # ============================================================
-    temp_splash = ft.Container(bgcolor="#000000", alignment=ft.Alignment.CENTER, expand=True)
+    initial_bg = "#000000" if _system_is_dark(page) else "#fafafa"
+    temp_splash = ft.Container(
+        bgcolor=initial_bg,
+        alignment=ft.Alignment.CENTER,
+        expand=True,
+    )
     splash_state = {"removed": False}
     try:
         page.overlay.append(temp_splash)
@@ -145,56 +199,143 @@ def main(page: Page):
         return str(assets_dir / logo_filename)
 
     # ============================================================
-    # Splash UI
+    # Splash UI — modern, animated, brand-focused
     # ============================================================
     p = P()
     splash_icon_src = _get_logo_src()
 
+    # Soft radial glow behind the logo for depth.
+    glow_color = "#10b98122" if current_dark() else "#05966915"
+    glow_radius = 90
+
+    logo_widget: ft.Control
     if splash_icon_src:
-        splash_icon = ft.Image(src=splash_icon_src, width=160, height=160, fit=ft.BoxFit.CONTAIN)
+        logo_widget = ft.Image(
+            src=splash_icon_src,
+            width=150,
+            height=150,
+            fit=ft.BoxFit.CONTAIN,
+        )
     else:
-        splash_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=160, color=p["primary"])
+        logo_widget = ft.Icon(
+            ft.Icons.FOLDER_SHARED_ROUNDED,
+            size=150,
+            color=p["primary"],
+        )
+
+    logo_with_glow = ft.Stack(
+        [
+            ft.Container(
+                width=glow_radius * 2,
+                height=glow_radius * 2,
+                border_radius=glow_radius,
+                bgcolor=glow_color,
+            ),
+            ft.Container(
+                content=logo_widget,
+                width=glow_radius * 2,
+                height=glow_radius * 2,
+                alignment=ft.Alignment.CENTER,
+            ),
+        ],
+        width=glow_radius * 2,
+        height=glow_radius * 2,
+        alignment=ft.Alignment.CENTER,
+    )
 
     brand_text = ft.Row(
         [
-            ft.Text("Blood", size=32, weight=ft.FontWeight.W_400, color=p["text_muted"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
-            ft.Text("Hound", size=32, weight=ft.FontWeight.W_800, color=p["text"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace", style=ft.TextStyle(letter_spacing=2)),
+            ft.Text(
+                "Blood",
+                size=34,
+                weight=ft.FontWeight.W_300,
+                color=p["text_muted"],
+                font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
+            ),
+            ft.Text(
+                "Hound",
+                size=34,
+                weight=ft.FontWeight.W_800,
+                color=p["text"],
+                font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
+                style=ft.TextStyle(letter_spacing=3),
+            ),
         ],
-        spacing=0, alignment=ft.MainAxisAlignment.CENTER, tight=True
+        spacing=0,
+        alignment=ft.MainAxisAlignment.CENTER,
+        tight=True,
     )
 
-    subtitle_text = ft.Text("Share files over your local network", size=15, color=p["text_muted"], weight=ft.FontWeight.W_400, text_align=ft.TextAlign.CENTER, style=ft.TextStyle(letter_spacing=0.5))
+    subtitle_text = ft.Text(
+        "Share files over your local network",
+        size=14,
+        color=p["text_muted"],
+        weight=ft.FontWeight.W_400,
+        text_align=ft.TextAlign.CENTER,
+        style=ft.TextStyle(letter_spacing=1.2),
+    )
 
-    dot1 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=0.3)
-    dot2 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=0.6)
-    dot3 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=1.0)
-    loading_dots = ft.Row([dot1, dot2, dot3], alignment=ft.MainAxisAlignment.CENTER, spacing=8, height=20, tight=True)
+    # Wave-style loading dots (more modern than the classic pulse).
+    dot1 = ft.Container(
+        width=8, height=8, border_radius=4,
+        bgcolor=p["text_muted"],
+        animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT),
+        opacity=0.2,
+    )
+    dot2 = ft.Container(
+        width=8, height=8, border_radius=4,
+        bgcolor=p["text_muted"],
+        animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT),
+        opacity=0.2,
+    )
+    dot3 = ft.Container(
+        width=8, height=8, border_radius=4,
+        bgcolor=p["text_muted"],
+        animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT),
+        opacity=0.2,
+    )
+
+    dots_container = ft.Row(
+        [dot1, dot2, dot3],
+        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=10,
+        height=24,
+        tight=True,
+    )
 
     splash_layer = ft.Container(
         content=ft.Column(
             [
                 ft.Container(expand=True),
-                splash_icon,
-                ft.Container(height=24),
+                logo_with_glow,
+                ft.Container(height=32),
                 brand_text,
-                ft.Container(height=8),
+                ft.Container(height=10),
                 subtitle_text,
                 ft.Container(expand=True),
-                loading_dots,
-                ft.Container(height=48),
+                dots_container,
+                ft.Container(height=56),
             ],
-            spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER,
+            spacing=0,
+            tight=True,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,
         ),
-        bgcolor=p["bg"], alignment=ft.Alignment.CENTER, expand=True,
+        bgcolor=p["bg"],
+        alignment=ft.Alignment.CENTER,
+        expand=True,
     )
 
     try:
         page.overlay.clear()
+    except Exception:
+        pass
+    try:
         page.overlay.append(splash_layer)
         page.update()
     except Exception:
         pass
-
+    
     if IS_ANDROID:
         try:
             from jnius import autoclass  # type: ignore[import-not-found]
@@ -229,7 +370,12 @@ def main(page: Page):
         try:
             page.run_task(fn, *args, **kwargs)
         except Exception:
-            threading.Thread(target=lambda: fn(*args, **kwargs), daemon=True).start()
+            def _runner():
+                try:
+                    asyncio.run(fn(*args, **kwargs))
+                except Exception:
+                    pass
+            threading.Thread(target=_runner, daemon=True).start()
 
     def log(message: str, level: str = "info"):
         state.add_log(_now(), message, level)
@@ -279,7 +425,6 @@ def main(page: Page):
         persist_settings()
         shutdown_server()
         try:
-            # Assign the task to a variable to avoid reportUnusedCoroutine
             _task = page.run_task(_close_window_async)
         except Exception:
             try: page.window.destroy()
@@ -648,9 +793,25 @@ def main(page: Page):
         except (ValueError, TypeError):
             pass
 
+    # Debounce device-name writes so we don't hit disk per keystroke.
+    _device_name_timer: dict[str, Any] = {"id": None}
+
     def set_device_name(value: str):
         state.device_name = value
-        persist_settings()
+
+        async def _delayed_save():
+            await asyncio.sleep(0.5)
+            persist_settings()
+
+        try:
+            if _device_name_timer["id"] is not None:
+                try:
+                    page.cancel_timer(_device_name_timer["id"])
+                except Exception:
+                    pass
+            _device_name_timer["id"] = page.run_task(_delayed_save)
+        except Exception:
+            persist_settings()
 
     handlers: Dict[str, Callable[..., Any]] = {
         "log": log, "cycle_theme": cycle_theme, "set_theme": set_theme,
@@ -900,8 +1061,10 @@ def main(page: Page):
         shutdown_server()
         try: safe_update()
         except Exception: pass
-    try: page.on_disconnect = on_disconnect
-    except Exception: pass
+    try:
+        page.on_disconnect = on_disconnect
+    except Exception as ex:
+        log(f"on_disconnect not supported: {ex}", "warn")
 
     log("App ready.", "ok")
     if IS_ANDROID:
@@ -921,29 +1084,61 @@ def main(page: Page):
     refresh_ip()
     page.update()
 
+    # ============================================================
+    # Splash removal — first launch of the day shows for longer
+    # ============================================================
+    first_today = _is_first_launch_today()
+
+    SPLASH_MIN_SHOW_FIRST = 5.0     # First launch of the day
+    SPLASH_MIN_SHOW_RETURN = 3    # Subsequent launches
+    SPLASH_MAX_WAIT = 10.0
+
+    splash_min_show = SPLASH_MIN_SHOW_FIRST if first_today else SPLASH_MIN_SHOW_RETURN
+    app_ready = {"value": True}
+
     async def _remove_splash_async():
         async def _animate_dots():
             try:
                 while not splash_state["removed"]:
-                    dot1.opacity, dot2.opacity, dot3.opacity = 1.0, 0.3, 0.3
-                    _ = (dot1.update(), dot2.update(), dot3.update())
-                    await asyncio.sleep(0.2)
+                    # Wave 1
+                    dot1.opacity = 1.0
+                    dot2.opacity = 0.3
+                    dot3.opacity = 0.2
+                    try: dots_container.update()
+                    except Exception: pass
+                    await asyncio.sleep(0.25)
                     if splash_state["removed"]: break
 
-                    dot1.opacity, dot2.opacity, dot3.opacity = 0.3, 1.0, 0.3
-                    _ = (dot1.update(), dot2.update(), dot3.update())
-                    await asyncio.sleep(0.2)
+                    # Wave 2
+                    dot1.opacity = 0.3
+                    dot2.opacity = 1.0
+                    dot3.opacity = 0.2
+                    try: dots_container.update()
+                    except Exception: pass
+                    await asyncio.sleep(0.25)
                     if splash_state["removed"]: break
 
-                    dot1.opacity, dot2.opacity, dot3.opacity = 0.3, 0.3, 1.0
-                    _ = (dot1.update(), dot2.update(), dot3.update())
-                    await asyncio.sleep(0.2)
+                    # Wave 3
+                    dot1.opacity = 0.2
+                    dot2.opacity = 0.3
+                    dot3.opacity = 1.0
+                    try: dots_container.update()
+                    except Exception: pass
+                    await asyncio.sleep(0.25)
             except Exception:
                 pass
-
+        
         dot_task = asyncio.create_task(_animate_dots())
+        start_time = time.time()
+
         try:
-            await asyncio.sleep(4.0)
+            while not app_ready["value"] and (time.time() - start_time) < SPLASH_MAX_WAIT:
+                await asyncio.sleep(0.1)
+
+            elapsed = time.time() - start_time
+            if elapsed < splash_min_show:
+                await asyncio.sleep(splash_min_show - elapsed)
+
             if not splash_state["removed"]:
                 splash_state["removed"] = True
                 try: await dot_task
@@ -977,7 +1172,7 @@ def main(page: Page):
         page.run_task(_remove_splash_async)
     except Exception:
         def _fallback():
-            time.sleep(4.0)
+            time.sleep(splash_min_show)
             try:
                 page.overlay.clear()
                 page.update()
