@@ -1,362 +1,454 @@
-# BloodHound
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="src/assets/logo_dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="src/assets/logo_light.png">
+    <img src="src/assets/logo_light.png" alt="BloodHound logo" width="120" height="120">
+  </picture>
+</p>
 
-**Share files. Stay local. Keep it simple.**
-
-BloodHound is a cross-platform file-sharing application that turns a folder on your device into a browsable, streamable web library over your local network.
-
-Built with **Python, Flet, and Flask**, it combines a native-style application interface with a lightweight web server, plus a standalone CLI for headless environments.
-
+<h1 align="center">BloodHound</h1>
 
 <p align="center">
-  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound">
-    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
-  </a>
-  <a href="https://flet.dev">
-    <img src="https://img.shields.io/badge/UI-Flet-00B0FF?style=flat-square&logo=flutter&logoColor=white" alt="Flet">
-  </a>
-  <a href="https://flask.palletsprojects.com">
-    <img src="https://img.shields.io/badge/Server-Flask-3BABC3?style=flat-square&logo=flask&logoColor=white" alt="Flask">
-  </a>
-  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20Windows%20%7C%20Linux%20%7C%20macOS-64748b?style=flat-square" alt="Platforms">
-  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/stargazers">
-    <img src="https://img.shields.io/github/stars/mohammed-mahmoudzadeh/bloodhound?style=flat-square" alt="GitHub Stars">
-  </a>
+  <strong>Share files. Stay local. Keep it simple.</strong>
+</p>
+
+<p align="center">
+  A modern, cross-platform file-sharing application that turns any folder on your device into a browsable, streamable web library — over your local network.
+</p>
+
+<p align="center">
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%2B-blue.svg" alt="Python"></a>
+  <a href="https://flet.dev/"><img src="https://img.shields.io/badge/Flet-1.0.4-02569B.svg" alt="Flet"></a>
+  <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/Flask-3.0-000000.svg" alt="Flask"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/platform-Android%20%7C%20Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg" alt="Platforms">
+  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/stargazers"><img src="https://img.shields.io/github/stars/mohammed-mahmoudzadeh/bloodhound?style=social" alt="Stars"></a>
+  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/network/members"><img src="https://img.shields.io/github/forks/mohammed-mahmoudzadeh/bloodhound?style=social" alt="Forks"></a>
 </p>
 
 ---
 
-## Why BloodHound?
+## 📖 Overview
 
 Moving files between devices shouldn't require uploading them to a cloud service or creating an account.
 
-BloodHound runs a web server on your device and lets other devices on your local network access the files you choose to share. Open the generated address in a browser and browse your files directly.
+**BloodHound** runs a lightweight web server on your device and lets other devices on your local network access the files you choose to share. Open the generated address in a browser and browse your files directly — no cloud, no accounts, no hassle.
 
-- **Local-first sharing** — serve files directly from your device over your local network.
-- **Two ways to run** — use the graphical application or launch the standalone CLI.
-- **Browser-based access** — access shared files from phones, tablets, and computers.
-- **Video streaming** — support HTTP Range requests for compatible playback and seeking.
-- **Live updates** — receive file-system changes through Server-Sent Events.
-- **Cross-platform foundation** — Flet provides the application UI, while Flask handles HTTP requests.
+Built with **Python**, **Flet** (Flutter for Python), and **Flask**, it combines a native-style application interface with a fast HTTP file server, plus a standalone CLI for headless environments.
 
-## Features
+### Which mode should I use?
 
-### Application
+| Mode | Best for |
+|------|----------|
+| **GUI (Flet)** | Desktop and mobile app with dashboard, activity log, and settings |
+| **CLI (headless)** | Terminals, servers, scripts, and environments without a display |
 
-| Feature | Description |
-|---|---|
-| Dashboard | Manage the sharing server and its settings. |
-| Activity | Access the application's activity view. |
-| Settings | Configure available application preferences. |
-| Network discovery | Discover available IPv4 interfaces. |
-| Adaptive UI | Build the interface with reusable Flet components and centralized design tokens. |
+Both modes share the same Flask file-browser backend.
 
-### Web file browser
+---
 
-| Feature | Description |
-|---|---|
-| Directory browsing | Navigate the shared directory tree. |
-| Recursive search | Find files across nested directories. |
-| Video streaming | Support HTTP Range requests for compatible clients. |
-| Thumbnails | Generate previews where supported. |
-| Live updates | Use Server-Sent Events (SSE) for file-system notifications. |
-| Modular frontend | Keep HTML, CSS, and JavaScript separate from Python routes. |
+## 📸 Screenshots
 
-### Headless CLI
+<p align="center">
+  <a href="docs/screenshots/">
+    <img src="https://img.shields.io/badge/📸_View_Screenshots-docs%2Fscreenshots-blue?style=for-the-badge" alt="View Screenshots">
+  </a>
+</p>
 
-Run the file-sharing server directly from a terminal without launching the Flet interface.
+> Curious what BloodHound looks like? Browse the full gallery in [`docs/screenshots/`](docs/screenshots/).
+---
+
+## ✨ Features
+
+### 🖥️ Application (Flet)
+
+- **Modern, minimal UI** — clean monochrome design with automatic light/dark theme support.
+- **Animated splash screen** — branded launch screen with smart timing (first launch of the day shows longer).
+- **Dashboard** — start/stop the server, pick a folder, choose a network interface.
+- **Activity log** — real-time view of server events.
+- **Settings** — theme, device name, default port.
+- **Adaptive layout** — responds to desktop, tablet, and mobile sizes.
+- **Automatic theme sync** — status bar and system chrome match the app theme.
+
+### 🌐 Web File Browser
+
+- **Directory browsing** — navigate the shared folder tree.
+- **Recursive search** — find files across nested directories instantly.
+- **Video streaming** — full HTTP Range request support for playback and smooth seeking without re-downloading.
+- **Thumbnails** — automatic previews for images and videos (via FFmpeg).
+- **Live updates** — Server-Sent Events (SSE) notify browsers of file changes.
+- **Inline previews** — images, videos, audio, PDFs, and text files open directly in the browser.
+- **Responsive UI** — works on phones, tablets, and desktops.
+- **Resume playback** — remember where you left off in videos and audio.
+
+### ⌨️ Headless CLI
+
+Run the file-sharing server directly from a terminal — no GUI required.
 
 ```bash
 bloodhound --dir /path/to/folder
 ```
 
-The CLI is useful for terminal-based workflows, lightweight deployments, and environments where a graphical interface is unnecessary.
+Perfect for:
 
-### Android integration
+· Terminal-based workflows
+· Servers and lightweight deployments
+· Environments without a display
+· Automation and scripts
 
-- Android-specific storage permission handling.
-- Battery optimization exemption support.
-- Foreground service support.
-- Android build configuration managed through `pyproject.toml`.
+🤖 Android Integration
 
-## Quick Start
+· Storage permission handling via flet-permission-handler.
+· Battery optimization exemption — keep the server alive in the background.
+· Foreground service support — survives Android's app lifecycle.
+· Native splash screen — matches the app's branding.
+· Adaptive icons — follows Android's icon guidelines.
 
-### 1. Clone the repository
+---
+
+🚀 Quick Start
+
+Prerequisites
+
+· Python 3.10 or newer
+· FFmpeg (optional — for thumbnails and video probing)
+· pip (latest version recommended)
+
+Installation
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/mohammed-mahmoudzadeh/bloodhound.git
 cd bloodhound
-```
 
-### 2. Create a virtual environment
-
-```bash
+# 2. Create and activate a virtual environment
 python -m venv .venv
+source .venv/bin/activate          # Linux / macOS
+# .venv\Scripts\Activate.ps1        # Windows PowerShell
+
+# 3. Install dependencies (includes the CLI entry point)
+pip install -e .
+
+# 4. (Optional) Add desktop extras for MediaInfo support
+pip install -e ".[desktop]"
 ```
 
-Activate it on Linux or macOS:
+Launch the GUI Application
 
 ```bash
-source .venv/bin/activate
+flet run
 ```
 
-On Windows PowerShell:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-### 3. Install dependencies
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-### 4. Launch the application
+Or directly:
 
 ```bash
 python src/main.py
 ```
 
-Once the application opens:
+First-time setup:
 
-1. Select the folder you want to share.
-2. Configure the available server settings.
-3. Start the server.
-4. Open the displayed address on another device connected to the same local network.
+1. Click Pick folder and choose the directory you want to share.
+2. Select the network interface (auto-detected).
+3. Click Start Server.
+4. Open the displayed URL on another device on the same network.
 
-The exact launch command may differ if the project's configured entry point changes.
+---
 
-## CLI Usage
+⌨️ CLI Usage
 
-BloodHound includes a standalone Flask file-browser package with its own module entry point.
-
-### Run from source
-
-From the repository root:
-
-```bash
-PYTHONPATH=src python -m bloodhound.core.share --dir /path/to/folder
-```
-
-Windows PowerShell:
-
-```powershell
-$env:PYTHONPATH = "src"
-python -m bloodhound.core.share --dir "C:\path\to\folder"
-```
-
-### Run an installed command
-
-If the package's console entry point is configured and installed:
+After pip install -e ., the bloodhound command is available on your PATH:
 
 ```bash
 bloodhound --dir ~/Documents
 ```
 
-Windows:
+If you prefer to run from source without installing:
 
-```powershell
-bloodhound --dir "C:\Users\YourUser\Documents"
+```bash
+# Linux / macOS
+PYTHONPATH=src python -m bloodhound.core.share --dir /path/to/folder
+
+# Windows PowerShell
+$env:PYTHONPATH = "src"
+python -m bloodhound.core.share --dir "C:\path\to\folder"
 ```
 
-The server's actual bind address and port depend on the current CLI implementation and configuration. Use the address reported by the running process to connect from another device.
+CLI options
 
-### Bash completion
+Flag Short Description
+--dir -d Directory to share (required)
+--port -p Port to listen on (default: 8000)
+--host -H Bind address (default: 0.0.0.0)
+--no-thumbs — Disable thumbnail generation
+--debug — Enable Flask debug mode ⚠️ unsafe on shared networks — see Security
 
-The repository includes a Bash completion script:
+Bash completion
 
-```text
-completion/bloodhound
+A completion script is included at completion/bloodhound. To install it manually:
+
+```bash
+# System-wide (requires sudo)
+sudo cp completion/bloodhound /etc/bash_completion.d/
+
+# Per-user
+mkdir -p ~/.local/share/bash-completion/completions
+cp completion/bloodhound ~/.local/share/bash-completion/completions/
 ```
 
-The configured installation process installs it to:
+Then reload your shell:
 
-```text
-/etc/bash_completion.d/bloodhound
+```bash
+source ~/.bashrc
 ```
 
-After installation, reload the Bash completion configuration or open a new shell.
+Note: pip install does not install the completion script automatically. Install it manually using the commands above.
 
-## Build for Android
+---
 
-BloodHound uses Flet's build tooling to package the application for Android.
+📱 Build for Android
 
-### Requirements
+Requirements
 
-- Flutter SDK
-- Android SDK and required build tools
-- Python dependencies from the project configuration
+· Flet ≥ 1.0.4
+· Flutter SDK ≥ 3.x
+· Android SDK — Platform, Build-Tools, and Platform-Tools
+· Java JDK 17 (required by Gradle)
+· ANDROID_HOME and ANDROID_SDK_ROOT environment variables set
+· Accepted SDK licenses (sdkmanager --licenses)
 
-### Build an APK
+Note: Flet's Android build bundles its own Python interpreter (typically 3.11 or 3.12 depending on Flet version). Make sure requires-python in pyproject.toml is compatible with the version Flet ships — check the Flet docs before changing it.
 
-Run the following command from the repository root:
+Build the APK
 
 ```bash
 flet build apk --arch arm64-v8a
 ```
 
-The expected output path for the current configuration is:
+Output: build/apk/app-release.apk
 
-```text
-build/apk/app-release.apk
-```
-
-Check the build output for the actual artifact location.
-
-Android permissions and application metadata are configured in `pyproject.toml`. Runtime storage permissions and relevant system settings must be handled on the target device.
-
-## Architecture
-
-BloodHound separates the graphical interface from the HTTP file-sharing layer. Both the GUI and the standalone CLI use the Flask file-browser package.
-
-```text
-                         BloodHound
-                            |
-              +-------------+--------------+
-              |                            |
-        Flet Application              Headless CLI
-              |                            |
-       +------+------+                     |
-       |      |      |                  ‌   |
-   Dashboard Activity Settings             |
-       |                                   |
-       +----------------+------------------+
-                        |
-                  Flask Server
-                        |
-                Flask File Browser
-                        |
-          +-------------+-------------+
-          |             |             |
-        Routes       File Access    Watcher
-          |             |             |
-      HTML / CSS / JS  Streaming    SSE Events
-                        |
-                 Local Network
-                        |
-               Web Browser Clients
-```
-
-### Flet application layer
-
-The Flet shell manages the user interface, navigation, shared state, and rendering lifecycle.
-
-### Flask server layer
-
-The Flask server exposes the shared directory over HTTP. The `FlaskServer` wrapper manages the server lifecycle for the graphical application.
-
-### Web interface layer
-
-The browser interface is implemented with HTML templates, CSS, and JavaScript. Python modules handle routing, file access, streaming, thumbnails, and file-system monitoring.
-
-### Streaming and live updates
-
-HTTP Range requests allow compatible clients to request portions of a file, supporting video playback and seeking. Server-Sent Events provide a mechanism for notifying connected browsers about file-system changes.
-
-## Project Layout
-
-```text
-bloodhound/
-├── pyproject.toml
-├── requirements.txt
-├── completion/
-│   └── bloodhound
-└── src/
-    ├── main.py
-    ├── assets/
-    │   └── icons and splash images
-    └── bloodhound/
-        ├── app.py
-        ├── state.py
-        ├── theme/
-        ├── components/
-        ├── views/
-        │   ├── dashboard
-        │   ├── activity
-        │   └── settings
-        └── core/
-            ├── server.py
-            ├── network.py
-            ├── share/
-            │   ├── __main__.py
-            │   ├── templates/
-            │   │   └── index.html
-            │   ├── static/
-            │   │   ├── styles.css
-            │   │   └── app.js
-            │   └── ...
-            └── ...
-```
-
-| Path | Responsibility |
-|---|---|
-| `pyproject.toml` | Build configuration, application metadata, dependencies, and Android settings. |
-| `requirements.txt` | Pinned Python dependencies. |
-| `completion/bloodhound` | Bash CLI completion definitions. |
-| `src/main.py` | Application entry point. |
-| `src/assets/` | Icons and splash-screen assets. |
-| `src/bloodhound/app.py` | Flet application shell and rendering lifecycle. |
-| `src/bloodhound/state.py` | Shared application state. |
-| `src/bloodhound/theme/` | Colors, typography, and spacing tokens. |
-| `src/bloodhound/components/` | Reusable UI components. |
-| `src/bloodhound/views/` | Dashboard, Activity, and Settings views. |
-| `src/bloodhound/core/server.py` | Flask server lifecycle wrapper. |
-| `src/bloodhound/core/network.py` | IPv4 interface discovery. |
-| `src/bloodhound/core/share/` | Flask routes, browser templates, static assets, file access, streaming, thumbnails, and file-system monitoring. |
-
-## Configuration
-
-### Network interfaces
-
-BloodHound discovers IPv4 interfaces that can be used for sharing.
-
-| Bind address | Behavior |
-|---|---|
-| `0.0.0.0` | Listen on all IPv4 interfaces. |
-| A specific LAN address | Listen on a selected network interface. |
-| A hotspot address | Allow connections through the hotspot interface when supported by the device and configuration. |
-
-Choose an address that is reachable from the client device. Firewall rules and network isolation settings may affect connectivity.
-
-### Port
-
-The previous application configuration uses port `8000` as the default. Confirm the current implementation if the default has changed.
-
-Choose an available TCP port supported by the application. The GUI provides port configuration where implemented.
-
-### Shared directory
-
-The selected directory is the root of the web file browser.
-
-For CLI usage:
+Install on device
 
 ```bash
-bloodhound --dir /path/to/folder
+adb install build/apk/app-release.apk
 ```
 
-The process must have permission to read the selected files and traverse the relevant directories.
-
-### Android permissions
-
-Android-specific settings are managed through `pyproject.toml` and the application's permission-handling code.
-
-Depending on the device and Android version, BloodHound may require network access, storage permissions, and appropriate background-execution settings. Grant runtime permissions and system exemptions when prompted.
-
-### Dependencies
-
-Python dependencies are declared in `requirements.txt` and the project configuration. Install them in the active virtual environment when developing from source.
-
-Optional media-inspection tools, if used by the current implementation, must be installed separately and made available on the system `PATH`.
-
-## Security Considerations
-
-BloodHound is designed for local-network file sharing, not unrestricted public exposure.
-
-- Share only directories intended to be accessible over the network.
-- Bind to a specific interface when listening on all interfaces is unnecessary.
-- Restrict access through host firewall rules when appropriate.
-- Avoid exposing the server directly to the public internet without reviewing authentication, authorization, transport security, and deployment requirements.
-
-Actual access controls depend on the current server implementation and configuration.
+Android permissions, icons, and splash screens are configured in pyproject.toml. Runtime storage permissions are handled by the app.
 
 ---
+
+📁 Project Layout
+
+```
+bloodhound/
+├── pyproject.toml              # Build config, dependencies, Android settings
+├── requirements.txt            # Pinned Python dependencies
+├── completion/
+│   └── bloodhound              # Bash CLI completion
+└── src/
+    ├── main.py                 # Flet entry point
+    ├── assets/                 # Icons and splash images
+    │   ├── icon.png
+    │   ├── logo_dark.png
+    │   ├── logo_light.png
+    │   └── splash_android*.png
+    └── bloodhound/
+        ├── app.py              # Flet UI shell
+        ├── state.py            # Shared application state
+        ├── settings_store.py   # Local settings persistence
+        ├── theme/              # Colors, typography, spacing tokens
+        ├── components/         # Reusable UI components
+        ├── views/              # Dashboard, Activity, Settings
+        └── core/
+            ├── server.py       # Flask server lifecycle wrapper
+            ├── network.py      # IPv4 interface discovery
+            └── share/          # Flask web app
+                ├── __main__.py # CLI entry point
+                ├── routes.py   # URL rules
+                ├── files.py    # File serving (Range, ETag)
+                ├── search.py   # Recursive search
+                ├── thumbs.py   # Thumbnail generation
+                ├── watcher.py  # SSE filesystem watcher
+                ├── templates/  # HTML templates
+                └── static/     # CSS and JS
+```
+
+Key files
+
+Path Responsibility
+pyproject.toml Build config, app metadata, dependencies, Android settings
+src/main.py Application entry point
+src/bloodhound/app.py Flet UI shell and rendering lifecycle
+src/bloodhound/state.py Shared application state
+src/bloodhound/theme/ Design tokens (colors, typography, spacing)
+src/bloodhound/components/ Reusable UI components
+src/bloodhound/views/ Dashboard, Activity, Settings views
+src/bloodhound/core/server.py Flask server lifecycle wrapper
+src/bloodhound/core/network.py IPv4 interface discovery
+src/bloodhound/core/share/ Flask routes, templates, static assets, streaming, thumbnails, watcher
+
+---
+
+⚙️ Configuration
+
+Network interfaces
+
+BloodHound auto-detects available IPv4 interfaces. You can choose:
+
+Address Behavior
+0.0.0.0 Listen on all IPv4 interfaces
+192.168.x.x Listen on a specific LAN interface (recommended)
+Hotspot IP Allow connections through a mobile hotspot
+
+Tip: For security, bind to a specific LAN address rather than 0.0.0.0 when possible. This prevents exposure on other networks (e.g., public Wi-Fi).
+
+Port
+
+Default port is 8000. You can change it from the Dashboard or Settings.
+
+Choose a port between 1024 and 65535 that isn't already in use.
+
+Shared directory
+
+The selected folder becomes the root of the web file browser. The app must have read access to the folder and its contents.
+
+Android permissions
+
+The following permissions are requested (configured in pyproject.toml):
+
+· INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE
+· READ_MEDIA_IMAGES, READ_MEDIA_VIDEO, READ_MEDIA_AUDIO
+· MANAGE_EXTERNAL_STORAGE
+· FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC
+· POST_NOTIFICATIONS
+· REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+
+Grant these when prompted. The app also offers a Battery Exemption button in the Dashboard.
+
+⚠️ Note for Play Store distribution: MANAGE_EXTERNAL_STORAGE is restricted by Google Play for new apps. If you plan to publish on Play Store, you'll need to migrate to Scoped Storage / SAF (Storage Access Framework) instead.
+
+Optional dependencies
+
+· FFmpeg — for thumbnail generation and video quality detection. If missing, thumbnails are skipped (video streaming still works).
+· MediaInfo — used by pymediainfo on desktop for more accurate video probing. Install with pip install -e ".[desktop]".
+
+---
+
+🔒 Security Considerations
+
+BloodHound has no built-in authentication. Anyone who can reach the server URL and port can browse and download shared files. Treat it as a trusted-LAN tool.
+
+· ✅ Share only folders you intend to expose on your LAN.
+· ✅ Bind to a specific LAN interface when possible.
+· ✅ Use a firewall to restrict access.
+· ✅ Close the server when you're done.
+· ❌ Do not expose BloodHound directly to the internet.
+· ❌ Do not share sensitive directories on untrusted networks.
+
+Additional notes
+
+· No TLS — traffic is plain HTTP. Do not use on untrusted networks (public Wi-Fi, hotel LANs, co-working spaces).
+· No CORS — browsers block cross-origin reads; other websites cannot fetch your files via JavaScript even if they know the URL.
+· Symlinks — the server resolves paths and rejects those that escape the shared root. See core/share/files.py when auditing.
+· --debug flag — Flask's debug mode enables Werkzeug's interactive debugger, which permits remote code execution. Use only on 127.0.0.1 or a trusted host.
+
+If you need remote access, use a VPN (like WireGuard or Tailscale) rather than opening ports on your router.
+
+---
+
+🛠️ Troubleshooting
+
+The server won't start
+
+· Check that the port is free (try lsof -i :8000 on Linux/macOS).
+· Ensure the shared folder exists and is readable.
+· Check the Activity log in the app for details.
+
+Files don't appear in the browser
+
+· Confirm that the folder was selected correctly.
+· Refresh the browser page.
+· Check that the server is still running.
+
+Android: server stops in background
+
+· Grant "All files access" permission.
+· Enable battery optimization exemption (button in Dashboard).
+· Keep the app in recent apps (don't swipe it away).
+
+Video won't play in browser
+
+· Make sure the format is supported (MP4/H.264 is the safest).
+· Try a different browser (Chrome / Edge / Firefox).
+· Check the Activity log for streaming errors.
+
+Bash completion not working
+
+· Confirm the script was copied to a directory on your $BASH_COMPLETION_USER_DIR path (see Bash completion).
+· Run source ~/.bashrc or open a new terminal.
+
+---
+
+💬 Community
+
+· GitHub Discussions — ask questions, share ideas
+· GitHub Issues — report bugs
+
+---
+
+🤝 Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. Fork the repository.
+2. Create a branch: git checkout -b feature/my-feature.
+3. Make your changes — follow the existing code style (English comments, no deprecated APIs).
+4. Test your changes locally (desktop + Android if possible).
+5. Commit with a clear message: git commit -m "feat: add my feature".
+6. Push and open a Pull Request.
+
+Coding standards
+
+· All code comments and docstrings in English.
+· Follow Flet 1.0.4 conventions (no deprecated APIs).
+· Keep the modular architecture (core/, views/, components/, theme/).
+
+Reporting bugs
+
+Please include:
+
+· OS and version (e.g., Android 13, Ubuntu 22.04)
+· Device model (if Android)
+· Steps to reproduce
+· Expected vs. actual behavior
+· Relevant logs from the Activity view
+
+---
+
+📄 License
+
+This project is licensed under the MIT License — see the LICENSE file for details.
+
+---
+
+🙏 Acknowledgements
+
+· Flet — Python UI framework that powers the app.
+· Flask — lightweight web server.
+· Werkzeug — WSGI toolkit.
+· Rich — beautiful terminal output for the CLI.
+· qrcode — QR code generation for quick pairing.
+· The open-source community for inspiration and countless helpful libraries.
+
+---
+
+<p align="center">
+  <em>Made with ❤️ for the local-first community.</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/issues">Report Bug</a>
+  ·
+  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/issues">Request Feature</a>
+  ·
+  <a href="#bloodhound">Back to top</a>
+</p>
