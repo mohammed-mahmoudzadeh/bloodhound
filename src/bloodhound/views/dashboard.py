@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import flet as ft
 import os
+from typing import Union
 
 from ..config import IS_ANDROID
 from ..core.fileinfo import scan_folder
@@ -36,14 +37,14 @@ def _format_android_path(path: str) -> tuple[str, str]:
     return os.path.basename(path) or path, path
 
 
-def build_dashboard(P, state, handlers, page_width=1200):
+def build_dashboard(P, state, handlers, page_width: int = 1200):
     toggle_server = handlers["toggle_server"]
     is_narrow = page_width < BP.md
 
     # ============================================================
     # Warning Banners (Android only)
     # ============================================================
-    banners = []
+    banners: list[ft.Control] = []
     if IS_ANDROID:
         if not has_storage_permission():
             banners.append(
@@ -102,9 +103,6 @@ def build_dashboard(P, state, handlers, page_width=1200):
     # ============================================================
     # Hero — access URL
     # ============================================================
-    # Apply a small downward offset via top padding on the icon so it
-    # visually centers with the text line-box (Flet's icon glyphs sit
-    # slightly above the baseline).
     link_icon_size = 22 if is_narrow else 24
     url_text_size = 17 if is_narrow else 20
     url_gap = Space.md

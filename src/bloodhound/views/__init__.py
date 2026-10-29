@@ -4,8 +4,9 @@ from .activity import build_activity
 from .settings import build_settings
 
 
-def build_view(index: int, P, state, handlers, page_width=1200):
+def build_view(index: int, P: dict, state, handlers, page_width: int = 1200):
     """Dispatch to the right view builder with consistent signature."""
+    page_width = int(page_width)
     if index == 0:
         return build_dashboard(P, state, handlers, page_width)
     if index == 1:

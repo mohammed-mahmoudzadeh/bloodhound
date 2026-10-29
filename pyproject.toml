@@ -60,8 +60,8 @@ splash_android = "assets/splash_android.png"
 splash_android_dark = "assets/splash_android_dark.png"
 
 [tool.flet.splash]
-color = "#FFFFFF"        # Light theme splash background
-dark_color = "#000000"   # Dark theme splash background
+color = "#FFFFFF"
+dark_color = "#000000"
 android_gravity = "fill"
 hide_animation = true
 
@@ -85,6 +85,7 @@ dependencies = ["pyjnius", "flet-android-background"]
 [tool.flet.android.manifest_application]
 usesCleartextTraffic = "true"
 
+# ---- Pylance: Relax false-positive errors from Flet's untyped API ---
 [tool.pyright]
 exclude = [
     "**/build",
@@ -94,3 +95,10 @@ exclude = [
     "**/dist",
     "**/node_modules",
 ]
+reportMissingImports = false
+reportMissingModuleSource = false
+reportAttributeAccessIssue = false
+reportArgumentType = false
+reportReturnType = false
+reportUnusedCoroutine = false
+reportUnusedExpression = false

@@ -6,16 +6,15 @@ import flet as ft
 from ..theme import Space, Radius, Type
 
 
-def SectionCard(P, content, dark=True, padding=Space.lg,
+def SectionCard(P, content, dark=True, padding: int | ft.Padding = Space.lg,
                 title=None, subtitle=None):
-    """Flat surface card with visible border.
-
-    Note: hover animation removed to avoid Flet "Control must be added to
-    the page first" errors when cards are rebuilt mid-interaction.
-    """
-    children = []
+    """Flat surface card with visible border."""
+    children: list[ft.Control] = []
     if title:
-        children.append(ft.Text(title, color=P["text"], **Type.title_md))
+        children.append(ft.Text(
+            title, color=P["text"],
+            size=15, weight=ft.FontWeight.W_600, font_family="Inter",
+        ))
     if subtitle:
         children.append(ft.Container(height=Space.xs))
         children.append(
@@ -24,7 +23,7 @@ def SectionCard(P, content, dark=True, padding=Space.lg,
                 color=P["text_muted"],
                 max_lines=1,
                 overflow=ft.TextOverflow.ELLIPSIS,
-                **Type.body_sm,
+                size=13, weight=ft.FontWeight.W_400, font_family="Inter",
             )
         )
     if title or subtitle:
@@ -42,19 +41,23 @@ def SectionCard(P, content, dark=True, padding=Space.lg,
 
 
 def AppBar(P, title, subtitle=None, trailing=None, leading=None):
-    """Top application bar. If `leading` is provided, it's placed before the title."""
-    left_children = []
+    """Top application bar."""
+    left_children: list[ft.Control] = []
     if leading is not None:
         left_children.append(leading)
-        left_children.append(ft.Container(width=Space.sm + 4)) # فاصله بهتر بین لوگو و متن
+        left_children.append(ft.Container(width=Space.sm + 2))
 
     left_children.append(
         ft.Column(
             [
-                ft.Text(title, color=P["text"], **Type.headline_sm)
-                if title else ft.Container(),
-                ft.Text(subtitle, color=P["text_muted"], **Type.body_sm)
-                if subtitle else ft.Container(),
+                ft.Text(
+                    title, color=P["text"],
+                    size=18, weight=ft.FontWeight.W_600, font_family="Inter",
+                ) if title else ft.Container(),
+                ft.Text(
+                    subtitle, color=P["text_muted"],
+                    size=13, weight=ft.FontWeight.W_400, font_family="Inter",
+                ) if subtitle else ft.Container(),
             ],
             spacing=0, tight=True,
         )
@@ -67,26 +70,12 @@ def AppBar(P, title, subtitle=None, trailing=None, leading=None):
         tight=True,
     )
 
-    # اضافه کردن یک فاصله استاندارد (Space.sm) به انتهای منوی سمت راست
-    trailing_controls = []
-    if trailing:
-        for i, item in enumerate(trailing):
-            trailing_controls.append(item)
-            if i < len(trailing) - 1:
-                # اگر آیتم‌ها IconActionButton باشند، فاصله بینشان را زیاد می‌کنیم
-                if isinstance(item, ft.Container) and getattr(item, 'content', None) and isinstance(getattr(item, 'content', None), ft.Icon):
-                    trailing_controls.append(ft.Container(width=Space.sm))
-                else:
-                    trailing_controls.append(ft.Container(width=Space.sm + 2))
-
     return ft.Container(
         content=ft.Row(
-            [left, ft.Container(expand=True), *trailing_controls],
+            [left, ft.Container(expand=True), *(trailing or [])],
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         ),
-        padding=ft.Padding.only(
-            left=Space.md, right=Space.lg, top=Space.md, bottom=Space.md
-        ), # پدینگ راست بیشتر برای جلوگیری از چسبیدن به لبه
+        padding=ft.Padding.symmetric(horizontal=Space.md, vertical=Space.md),
         border=ft.Border.only(bottom=ft.BorderSide(1, P["border"])),
         bgcolor=P["bg"],
     )
