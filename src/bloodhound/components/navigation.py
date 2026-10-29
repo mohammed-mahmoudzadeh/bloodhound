@@ -1,4 +1,4 @@
-"""Adaptive navigation — sidebar on desktop, bar on mobile."""
+"""Adaptive navigation — sidebar on desktop, floating bar on mobile."""
 from __future__ import annotations
 
 import flet as ft
@@ -23,12 +23,11 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
         item = ft.Container(
             content=ft.Row(
                 [
-                    # Increased icon size from 20 to 22
                     ft.Icon(d["icon"], size=22, color=icon_color),
                     ft.Container(width=Space.md),
                     ft.Text(
                         d["label"],
-                        size=14, # Increased font size from 13 to 14
+                        size=14,
                         weight=ft.FontWeight.W_500 if selected else ft.FontWeight.W_400,
                         color=fg,
                     ),
@@ -36,7 +35,6 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
                 spacing=0,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            # Slightly increased vertical padding for a taller item
             padding=ft.Padding.symmetric(horizontal=Space.md, vertical=12),
             margin=ft.Margin.symmetric(horizontal=Space.sm, vertical=2),
             bgcolor=bg,
@@ -52,13 +50,9 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
         padding=ft.Padding.symmetric(vertical=Space.md),
     )
 
-    # ============================================================
-    # Status Block (Bottom)
-    # ============================================================
     is_online = bool(state and state.server_running)
     status_color = P["status_online"] if is_online else P["status_offline"]
 
-    # Use a glowing dot for status
     status_dot = ft.Container(
         width=8, height=8, 
         border_radius=4, 
@@ -71,7 +65,6 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
         ) if is_online else None,
     )
 
-    # Larger font for the status label
     status_label = ft.Text(
         "Online" if is_online else "Offline",
         size=13,
@@ -79,7 +72,6 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
         color=P["status_online"] if is_online else P["text_dim"],
     )
 
-    # Larger font and brighter color for the port
     port_label = ft.Text(
         f"Port {state.port}" if state else "Port 8000",
         size=12,
@@ -89,7 +81,6 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
     status_block = ft.Container(
         content=ft.Row(
             [
-                # Left side: Status indicator
                 ft.Row(
                     [
                         status_dot,
@@ -99,7 +90,6 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
                     spacing=0,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                # Right side: Port
                 port_label,
             ],
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -123,23 +113,37 @@ def NavSidebar(P, selected_index, on_change, destinations, state=None):
 
 
 def NavBar(P, selected_index, on_change, destinations):
-    """Mobile — bottom nav bar with larger, better-spaced icons."""
-    return ft.NavigationBar(
+    """Mobile — Floating, modern bottom nav bar."""
+    
+    nav_bar = ft.NavigationBar(
         selected_index=selected_index,
         on_change=on_change,
         destinations=[
             ft.NavigationBarDestination(
-                icon=ft.Icon(d["icon"], size=26, color=P["text_muted"]), # Increased to 26
-                selected_icon=ft.Icon(d["icon"], size=26, color=P["text"]), # Increased to 26
+                icon=ft.Icon(d["icon"], size=24, color=P["text_muted"]),
+                selected_icon=ft.Icon(d["icon"], size=24, color=P["text"]),
                 label=d["label"],
             )
             for d in destinations
         ],
-        bgcolor=P["bg"],
-        indicator_color="transparent",
+        bgcolor="transparent",
+        indicator_color=P["surface_2"],
         elevation=0,
-        height=72, # Slightly taller to accommodate larger icons
+        height=68,
         label_behavior=ft.NavigationBarLabelBehavior.ALWAYS_SHOW,
+    )
+
+    return ft.Container(
+        content=nav_bar,
+        bgcolor=P["surface"],
+        border=ft.Border.all(1, P["border"]),
+        border_radius=24,
+        margin=ft.Margin.only(left=16, right=16, bottom=16),
+        shadow=ft.BoxShadow(
+            blur_radius=20,
+            color="#000000" if P["bg"] == "#000000" else "#00000010",
+            offset=ft.Offset(0, 4),
+        ),
     )
 
 

@@ -38,7 +38,7 @@ def _format_android_path(path: str) -> tuple[str, str]:
 
 def build_dashboard(P, state, handlers, page_width=1200):
     toggle_server = handlers["toggle_server"]
-    is_narrow = page_width < BP.sm
+    is_narrow = page_width < BP.md
 
     # ============================================================
     # Warning Banners (Android only)
@@ -102,9 +102,33 @@ def build_dashboard(P, state, handlers, page_width=1200):
     # ============================================================
     # Hero — access URL
     # ============================================================
+    # Apply a small downward offset via top padding on the icon so it
+    # visually centers with the text line-box (Flet's icon glyphs sit
+    # slightly above the baseline).
+    link_icon_size = 22 if is_narrow else 24
+    url_text_size = 17 if is_narrow else 20
+    url_gap = Space.md
+
+    link_icon = ft.Container(
+        content=ft.Icon(ft.Icons.LINK_ROUNDED, size=link_icon_size, color=P["text_dim"]),
+        padding=ft.Padding.only(top=2),
+    )
+
+    url_row = ft.Row(
+        [
+            link_icon,
+            ft.Container(width=url_gap),
+            ft.Text(
+                state.access_url, color=P["text"], size=url_text_size, weight=ft.FontWeight.W_500,
+                selectable=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS, expand=True,
+            ),
+        ],
+        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        spacing=0,
+        tight=True,
+    )
+
     if is_narrow:
-        # Line 1: Title "Access URL" and action buttons
-        # Line 2: Wi-Fi icon and the URL
         hero_content = ft.Column(
             [
                 ft.Row(
@@ -114,24 +138,18 @@ def build_dashboard(P, state, handlers, page_width=1200):
                         ),
                         ft.Container(expand=True),
                         IconActionButton(P, icon=ft.Icons.CONTENT_COPY_ROUNDED, on_click=lambda e: handlers["copy_url"](), tooltip="Copy URL", size=32),
-                        ft.Container(width=Space.xs),
+                        ft.Container(width=Space.sm),
                         IconActionButton(P, icon=ft.Icons.OPEN_IN_NEW_ROUNDED, on_click=lambda e: handlers["open_url"](), tooltip="Open in browser", size=32),
-                        ft.Container(width=Space.xs),
+                        ft.Container(width=Space.sm),
                         IconActionButton(P, icon=ft.Icons.QR_CODE_ROUNDED, on_click=lambda e: handlers["show_qr"](), tooltip="Show QR code", size=32),
                     ],
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
                 ft.Container(height=Space.md),
-                ft.Row(
-                    [
-                        ft.Icon(ft.Icons.WIFI_ROUNDED, size=20, color=P["text_dim"]),
-                        ft.Container(width=Space.sm),
-                        ft.Text(
-                            state.access_url, color=P["text"], size=16, weight=ft.FontWeight.W_500,
-                            selectable=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS, expand=True,
-                        ),
-                    ],
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                ft.Container(
+                    content=url_row,
+                    padding=ft.Padding.symmetric(horizontal=0, vertical=0),
+                    bgcolor=ft.Colors.TRANSPARENT,
                 ),
             ],
             spacing=0,
@@ -141,21 +159,17 @@ def build_dashboard(P, state, handlers, page_width=1200):
         hero_content = ft.Row(
             [
                 ft.Container(
-                    content=ft.Icon(ft.Icons.WIFI_ROUNDED, size=22, color=P["text"]),
-                    width=40, height=40,
-                    alignment=ft.Alignment.CENTER,
-                ),
-                ft.Container(width=Space.sm),
-                ft.Text(
-                    state.access_url, color=P["text"], size=18, weight=ft.FontWeight.W_600,
-                    selectable=True, max_lines=1, overflow=ft.TextOverflow.ELLIPSIS, expand=True,
+                    content=url_row,
+                    padding=ft.Padding.symmetric(horizontal=0, vertical=0),
+                    bgcolor=ft.Colors.TRANSPARENT,
+                    expand=True,
                 ),
                 IconActionButton(P, icon=ft.Icons.CONTENT_COPY_ROUNDED, on_click=lambda e: handlers["copy_url"](), tooltip="Copy URL", size=36),
-                ft.Container(width=Space.xs),
-                IconActionButton(P, icon=ft.Icons.OPEN_IN_NEW_ROUNDED, on_click=lambda e: handlers["open_url"](), tooltip="Open in browser", size=36),
-                ft.Container(width=Space.xs),
-                IconActionButton(P, icon=ft.Icons.QR_CODE_ROUNDED, on_click=lambda e: handlers["show_qr"](), tooltip="Show QR code", size=36),
                 ft.Container(width=Space.sm),
+                IconActionButton(P, icon=ft.Icons.OPEN_IN_NEW_ROUNDED, on_click=lambda e: handlers["open_url"](), tooltip="Open in browser", size=36),
+                ft.Container(width=Space.sm),
+                IconActionButton(P, icon=ft.Icons.QR_CODE_ROUNDED, on_click=lambda e: handlers["show_qr"](), tooltip="Show QR code", size=36),
+                ft.Container(width=Space.md),
                 StatusChip(
                     P, "Online" if state.server_running else "Offline",
                     "online" if state.server_running else "offline",
@@ -169,7 +183,6 @@ def build_dashboard(P, state, handlers, page_width=1200):
     # ============================================================
     # Server card
     # ============================================================
-    # Port field: editable only when server is stopped
     port_field = TextInput(
         P, hint="8000", value=state.port,
         on_change=lambda e: handlers["set_port"](e.control.value),
@@ -188,11 +201,16 @@ def build_dashboard(P, state, handlers, page_width=1200):
         value=str(state.iface_index),
         options=iface_options,
         on_select=lambda e: handlers["on_iface_change"](int(e.control.value or "0")),
-        height=46, border_radius=Radius.lg, bgcolor=P["surface_2"],
-        border_color=P["border"], focused_border_color=P["primary"],
-        color=P["text"], text_style=ft.TextStyle(color=P["text"], size=15),
-        border_width=1, content_padding=ft.Padding.symmetric(horizontal=Space.md, vertical=0),
-        disabled=state.server_running,  # Lock when running
+        height=46, 
+        border_radius=Radius.lg, 
+        bgcolor=P["surface_2"],
+        border_color=P["border"], 
+        focused_border_color=P["primary"],
+        color=P["text"], 
+        text_style=ft.TextStyle(color=P["text"], size=15),
+        border_width=1, 
+        content_padding=ft.Padding.symmetric(horizontal=Space.md, vertical=0),
+        disabled=state.server_running,
     )
     if state.server_running:
         iface_dropdown.bgcolor = P["surface"]
@@ -211,9 +229,9 @@ def build_dashboard(P, state, handlers, page_width=1200):
                 [
                     ft.Container(
                         content=(
-                            DestructiveButton(P, "Stop Server", icon=ft.Icons.STOP_ROUNDED, on_click=toggle_server)
+                            DestructiveButton(P, "Stop Server", icon=ft.Icons.POWER_SETTINGS_NEW_ROUNDED, on_click=toggle_server)
                             if state.server_running else
-                            PrimaryButton(P, "Start Server", icon=ft.Icons.PLAY_ARROW_ROUNDED, on_click=toggle_server)
+                            PrimaryButton(P, "Start Server", icon=ft.Icons.POWER_SETTINGS_NEW_ROUNDED, on_click=toggle_server)
                         ),
                         expand=True,
                     ),
@@ -221,7 +239,7 @@ def build_dashboard(P, state, handlers, page_width=1200):
                     ft.Container(
                         content=SecondaryButton(
                             P, "Refresh IP",
-                            icon=ft.Icons.REFRESH_ROUNDED,
+                            icon=ft.Icons.SYNC_ROUNDED,
                             on_click=lambda e: handlers["refresh_ip"](),
                             disabled=state.server_running,
                         ),
@@ -364,17 +382,7 @@ def build_dashboard(P, state, handlers, page_width=1200):
     )
 
     # ============================================================
-    # Recent activity
-    # ============================================================
-    recent_content = ft.Column(
-        [LogRow(P, e.time, e.message, e.level) for e in state.logs[-5:]] or
-        [ft.Text("No activity yet.", color=P["text_muted"], **Type.body_sm)],
-        spacing=Space.sm, tight=True,
-    )
-    recent = SectionCard(P, dark=state.dark, title="Recent Activity", content=recent_content)
-
-    # ============================================================
-    # Layout with Optimized Equal Height Cards
+    # Layout 
     # ============================================================
     CARD_HEIGHT = 235
 
@@ -382,7 +390,7 @@ def build_dashboard(P, state, handlers, page_width=1200):
         cards_section = ft.Column(
             [
                 server_card,
-                ft.Container(height=Space.md),
+                ft.Container(height=Space.sm),
                 folder,
             ],
             spacing=0, tight=True,
@@ -401,8 +409,6 @@ def build_dashboard(P, state, handlers, page_width=1200):
         hero,
         ft.Container(height=Space.md),
         cards_section,
-        ft.Container(height=Space.md),
-        recent,
     ]
 
     body_content = ft.Column(layout_items, spacing=0, tight=True)

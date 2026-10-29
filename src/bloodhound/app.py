@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import atexit
+import asyncio
 import os
 import signal
 import threading
@@ -37,13 +38,12 @@ def run():
 
 
 def main(page: Page):
+    page.adaptive = True
+    
     if not IS_ANDROID:
         try:
             page.window.title_bar_hidden = True
             page.window.title_bar_buttons_hidden = True
-        except Exception:
-            pass
-        try:
             page.window.width = WINDOW_DEFAULT_WIDTH
             page.window.height = WINDOW_DEFAULT_HEIGHT
             page.window.min_width = WINDOW_MIN_WIDTH
@@ -54,15 +54,10 @@ def main(page: Page):
     _configure_page(page)
 
     # ============================================================
-    # Early Splash (Shown immediately before any heavy work)
+    # Early Splash
     # ============================================================
-    temp_splash = ft.Container(
-        bgcolor="#000000",
-        alignment=ft.Alignment.CENTER,
-        expand=True,
-    )
+    temp_splash = ft.Container(bgcolor="#000000", alignment=ft.Alignment.CENTER, expand=True)
     splash_state = {"removed": False}
-    
     try:
         page.overlay.append(temp_splash)
         page.update()
@@ -70,7 +65,7 @@ def main(page: Page):
         pass
 
     # ============================================================
-    # Initialize state and server
+    # Initialize State & Theme
     # ============================================================
     state = AppState()
     settings_load_error: Exception | None = None
@@ -80,9 +75,6 @@ def main(page: Page):
         settings_load_error = ex
     server = FlaskServer(port=int(state.port))
 
-    # ============================================================
-    # Theme holder
-    # ============================================================
     theme_holder = {
         "mode": state.theme_mode,
         "system_dark": _system_is_dark(page),
@@ -107,17 +99,39 @@ def main(page: Page):
 
     refresh_palette()
 
+    def _safe_area_top() -> int:
+        """Return the top safe-area inset (status bar height) in px."""
+        if not IS_ANDROID:
+            return 0
+        try:
+            from jnius import autoclass
+            activity_host = os.getenv("MAIN_ACTIVITY_HOST_CLASS_NAME")
+            if activity_host:
+                host = autoclass(activity_host)
+                activity = host.mActivity
+            else:
+                from android import mActivity as activity  # type: ignore
+            if activity is None:
+                return 18
+            res = activity.getResources()
+            res_id = res.getIdentifier("status_bar_height", "dimen", "android")
+            if res_id > 0:
+                raw = int(res.getDimensionPixelSize(res_id))
+                return max(raw - 18, 18)
+        except Exception:
+            pass
+        return 18
+
     # ============================================================
-    # Locate Assets
+    # Assets
     # ============================================================
     _here = Path(__file__).resolve()
     _asset_candidates = [
-        _here.parent.parent / "assets",       # src/assets
-        _here.parent.parent.parent / "assets",# root/assets
+        _here.parent.parent / "assets",
+        _here.parent.parent.parent / "assets",
         Path.cwd() / "assets",
         Path.cwd() / "src" / "assets",
     ]
-    
     assets_dir = None
     for _p in _asset_candidates:
         if _p.is_dir() and (_p / "logo_dark.png").exists():
@@ -131,65 +145,30 @@ def main(page: Page):
         return str(assets_dir / logo_filename)
 
     # ============================================================
-    # Build the real splash (Polished Design)
+    # Splash UI
     # ============================================================
     p = P()
     splash_icon_src = _get_logo_src()
 
     if splash_icon_src:
-        splash_icon = ft.Image(
-            src=splash_icon_src, 
-            width=160, 
-            height=160, 
-            fit=ft.BoxFit.CONTAIN
-        )
+        splash_icon = ft.Image(src=splash_icon_src, width=160, height=160, fit=ft.BoxFit.CONTAIN)
     else:
         splash_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=160, color=p["primary"])
 
-    # Split brand name into two distinct parts
     brand_text = ft.Row(
         [
-            ft.Text(
-                "Blood",
-                size=32,
-                weight=ft.FontWeight.W_400,
-                color=p["text_muted"],
-                font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
-            ),
-            ft.Text(
-                "Hound",
-                size=32,
-                weight=ft.FontWeight.W_800,
-                color=p["text"],
-                font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
-                style=ft.TextStyle(letter_spacing=2),
-            )
+            ft.Text("Blood", size=32, weight=ft.FontWeight.W_400, color=p["text_muted"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
+            ft.Text("Hound", size=32, weight=ft.FontWeight.W_800, color=p["text"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace", style=ft.TextStyle(letter_spacing=2)),
         ],
-        spacing=0,
-        alignment=ft.MainAxisAlignment.CENTER,
-        tight=True
+        spacing=0, alignment=ft.MainAxisAlignment.CENTER, tight=True
     )
 
-    subtitle_text = ft.Text(
-        "Share files over your local network",
-        size=15,
-        color=p["text_muted"],
-        weight=ft.FontWeight.W_400,
-        text_align=ft.TextAlign.CENTER,
-        style=ft.TextStyle(letter_spacing=0.5),
-    )
+    subtitle_text = ft.Text("Share files over your local network", size=15, color=p["text_muted"], weight=ft.FontWeight.W_400, text_align=ft.TextAlign.CENTER, style=ft.TextStyle(letter_spacing=0.5))
 
     dot1 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=0.3)
     dot2 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=0.6)
     dot3 = ft.Container(width=6, height=6, border_radius=3, bgcolor=p["text_muted"], animate_opacity=ft.Animation(600, ft.AnimationCurve.EASE_IN_OUT), opacity=1.0)
-
-    loading_dots = ft.Row(
-        [dot1, dot2, dot3],
-        alignment=ft.MainAxisAlignment.CENTER,
-        spacing=8,
-        height=20,
-        tight=True
-    )
+    loading_dots = ft.Row([dot1, dot2, dot3], alignment=ft.MainAxisAlignment.CENTER, spacing=8, height=20, tight=True)
 
     splash_layer = ft.Container(
         content=ft.Column(
@@ -204,14 +183,9 @@ def main(page: Page):
                 loading_dots,
                 ft.Container(height=48),   
             ],
-            spacing=0,
-            tight=True,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER,
         ),
-        bgcolor=p["bg"],
-        alignment=ft.Alignment.CENTER,
-        expand=True,
+        bgcolor=p["bg"], alignment=ft.Alignment.CENTER, expand=True,
     )
 
     try:
@@ -220,8 +194,6 @@ def main(page: Page):
         page.update()
     except Exception:
         pass
-
-    top_pad = 28 if IS_ANDROID else 0
 
     if IS_ANDROID:
         try:
@@ -232,6 +204,9 @@ def main(page: Page):
         except Exception:
             pass
 
+    # ============================================================
+    # Services & Handlers Setup
+    # ============================================================
     file_picker = ft.FilePicker()
     ph = None
     try:
@@ -259,8 +234,7 @@ def main(page: Page):
         state.add_log(_now(), message, level)
 
     def persist_settings():
-        try:
-            save_settings(state)
+        try: save_settings(state)
         except OSError as ex:
             log(f"Could not save settings: {ex}", "err")
 
@@ -275,7 +249,9 @@ def main(page: Page):
         except Exception: pass
     atexit.register(shutdown_server)
 
-    # Window controls
+    # ============================================================
+    # Core Logic
+    # ============================================================
     def on_minimize(e=None):
         try: page.window.minimized = True
         except Exception:
@@ -331,7 +307,6 @@ def main(page: Page):
             _btn(ft.Icons.CLOSE_ROUNDED, on_close, "Close", "#e81123"),
         ], spacing=0, tight=True)
 
-    # Theme toggles
     def set_theme(mode: str):
         if mode not in ("auto", "light", "dark"): return
         theme_holder["mode"] = mode
@@ -353,7 +328,6 @@ def main(page: Page):
         if m == "light": return ft.Icons.LIGHT_MODE_ROUNDED, "Theme: Light"
         return ft.Icons.DARK_MODE_ROUNDED, "Theme: Dark"
 
-    # Network & Server logic
     def _pick_default_index(interfaces):
         for i, (_, ip) in enumerate(interfaces):
             if ip.startswith("192.168."): return i
@@ -389,8 +363,15 @@ def main(page: Page):
                     _apply_interfaces(ips)
                     log(f"Detected {len(ips)} interfaces — {state.iface_label} · {state.iface_ip}", "ok")
                     render()
-                try: page.run_task(_apply)
-                except Exception: _apply()
+                try:
+                    page.run_task(_apply)
+                except Exception as ex:
+                    log(f"Could not schedule UI update: {ex}", "warn")
+                    _apply_interfaces(ips)
+                    try:
+                        safe_update()
+                    except Exception:
+                        pass
             except Exception as ex: log(f"Refresh failed: {ex}", "err")
         threading.Thread(target=_work, daemon=True).start()
 
@@ -568,7 +549,6 @@ def main(page: Page):
         log("Battery settings opened. Waiting for your choice...", "info")
         render()
         async def _check_after_return():
-            import asyncio
             await asyncio.sleep(1.5)
             for _ in range(10):
                 if is_ignoring_battery_optimizations():
@@ -638,10 +618,7 @@ def main(page: Page):
         ], spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER)
         
         dialog_kwargs = {
-            "content": ft.Container(
-                content=dialog_content, 
-                padding=ft.Padding.all(Space.md)
-            ),
+            "content": ft.Container(content=dialog_content, padding=ft.Padding.all(Space.md)),
             "bgcolor": p["surface_2"],
             "modal": True,
             "on_dismiss": _close_qr,
@@ -662,14 +639,18 @@ def main(page: Page):
         except AttributeError: state.view = getattr(e, "selected_index", 0)
         render()
 
+    def _nav_to(index: int):
+        def handler(e=None):
+            state.view = index
+            render()
+        return handler
+
     def set_port(value: str):
         try:
             port_int = int(value)
             if 1024 <= port_int <= 65535:
                 state.port = value
                 persist_settings()
-            else:
-                pass
         except (ValueError, TypeError):
             pass
 
@@ -689,94 +670,236 @@ def main(page: Page):
         "set_device_name": set_device_name,
     }
 
-    appbar_holder = ft.Container()
-    body_scroll = ft.Column([], spacing=0, tight=True, scroll=ft.ScrollMode.AUTO, expand=True)
-    rail_holder = ft.Container(visible=False)
-    navbar_holder = ft.Container(visible=False)
+    # ============================================================
+    # Render Function (Responsive)
+    # ============================================================
+    root_holder = ft.Container(expand=True)
     destinations = [
         {"icon": ft.Icons.GRID_VIEW_ROUNDED, "label": "Dashboard"},
         {"icon": ft.Icons.HISTORY_ROUNDED, "label": "Activity"},
         {"icon": ft.Icons.SETTINGS_ROUNDED, "label": "Settings"},
     ]
-    root_holder = ft.Container(expand=True)
+
+    _last_wide: bool | None = None
+    SIDEBAR_WIDTH = 180
 
     def render():
+        nonlocal _last_wide
+        
         p = P()
         page.bgcolor = p["bg"]
         page.theme_mode = ft.ThemeMode.DARK if current_dark() else ft.ThemeMode.LIGHT
 
-        wide = (page.width or 0) >= BP.md
+        width = page.width or (WINDOW_DEFAULT_WIDTH if not IS_ANDROID else 400)
+        
+        # --- Responsive Breakpoints ---
+        is_mobile = width < BP.md
+        is_narrow_desktop = BP.md <= width < 900
+        
+        _last_wide = not is_mobile
+
         theme_icon, theme_tooltip = _theme_icon()
         
-        # --- Use the Logo Image in the App Header ---
+        # --- Header Brand Logo Sizing ---
+        if is_mobile:
+            logo_size = 56
+            img_size = 44
+            brand_font_size = 20
+            subtitle_font_size = 13
+        else:
+            logo_size = 56
+            img_size = 44
+            brand_font_size = 20
+            subtitle_font_size = 13
+
+        # --- Brand Logo (no background, no border) ---
         logo_src = _get_logo_src()
         if logo_src:
-            logo_bg = p["surface_2"] if current_dark() else "#ffffff"
-            
-            brand_logo = ft.Container(
-                content=ft.Image(
-                    src=logo_src, 
-                    width=28, 
-                    height=28, 
-                    fit=ft.BoxFit.CONTAIN
-                ),
-                width=42, height=42, 
-                bgcolor=logo_bg, 
-                border=ft.Border.all(1, p["border"]), 
-                border_radius=Radius.md, 
-                alignment=ft.Alignment.CENTER,
-                padding=ft.Padding.all(4) 
+            brand_logo = ft.Image(
+                src=logo_src,
+                width=img_size,
+                height=img_size,
+                fit=ft.BoxFit.CONTAIN,
             )
         else:
-            brand_logo = ft.Container(
-                content=ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=22, color=p["text"]), 
-                width=42, height=42, 
-                bgcolor=p["surface_2"], 
-                border=ft.Border.all(1, p["border"]), 
-                border_radius=Radius.md, 
-                alignment=ft.Alignment.CENTER
-            )
+            brand_logo = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=44, color=p["text"])
 
         brand_column = ft.Column(
             [
                 ft.Row(
                     [
-                        ft.Text("Blood", size=17, weight=ft.FontWeight.W_400, color=p["text_muted"]),
-                        ft.Text("Hound", size=17, weight=ft.FontWeight.W_700, color=p["text"]),
+                        ft.Text("Blood", size=brand_font_size, weight=ft.FontWeight.W_400, color=p["text_muted"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
+                        ft.Text("Hound", size=brand_font_size, weight=ft.FontWeight.W_700, color=p["text"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
                     ],
-                    spacing=0,
-                    tight=True
+                    spacing=0, tight=True
                 ),
-                ft.Text("File server", size=12, color=p["text_muted"])
+                ft.Text("File server", size=subtitle_font_size, color=p["text_muted"])
             ], 
             spacing=2, tight=True
         )
-        
-        status_tone = "online" if state.server_running else "offline"
-        
-        if wide:
-            drag_region = ft.WindowDragArea(content=ft.Container(content=ft.Row([brand_logo, ft.Container(width=Space.sm + 4), brand_column, ft.Container(expand=True)], spacing=0, vertical_alignment=ft.CrossAxisAlignment.CENTER, tight=False), expand=True), expand=True, maximizable=True)
-            controls_row = ft.Row([IconActionButton(p, icon=theme_icon, on_click=cycle_theme, tooltip=theme_tooltip), ft.Container(width=Space.sm), StatusChip(p, "Online" if state.server_running else "Offline", status_tone), ft.Container(width=Space.md), _window_controls()], spacing=0, vertical_alignment=ft.CrossAxisAlignment.CENTER, tight=True)
-            appbar_holder.content = ft.Container(content=ft.Row([drag_region, controls_row], spacing=0, vertical_alignment=ft.CrossAxisAlignment.CENTER), padding=ft.Padding.symmetric(horizontal=Space.lg, vertical=Space.md), border=ft.Border.only(bottom=ft.BorderSide(1, p["border"])), bgcolor=p["bg"])
+
+        # --- Build Header ---
+        if not is_mobile:
+            # Desktop Header
+            header_left = ft.Row(
+                [brand_logo, ft.Container(width=Space.md), brand_column],
+                spacing=0,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                tight=True,
+            )
+            
+            icon_size = 40
+            header_content = ft.Row(
+                [
+                    ft.WindowDragArea(content=header_left, maximizable=True),
+                    ft.Container(expand=True),
+                    ft.Container(
+                        content=IconActionButton(p, icon=theme_icon, on_click=cycle_theme, tooltip=theme_tooltip, size=icon_size),
+                        padding=ft.Padding.only(bottom=4),
+                    ),
+                ],
+                spacing=0,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            )
+            
+            if is_narrow_desktop:
+                header_content.controls.extend([
+                    ft.Container(width=Space.sm),
+                    ft.Container(
+                        content=IconActionButton(p, icon=ft.Icons.HISTORY_ROUNDED, on_click=_nav_to(1), tooltip="Activity", size=icon_size),
+                        padding=ft.Padding.only(bottom=4),
+                    ),
+                    ft.Container(width=Space.sm),
+                    ft.Container(
+                        content=IconActionButton(p, icon=ft.Icons.SETTINGS_ROUNDED, on_click=_nav_to(2), tooltip="Settings", size=icon_size),
+                        padding=ft.Padding.only(bottom=4),
+                    ),
+                ])
+            else:
+                header_content.controls.extend([
+                    ft.Container(width=Space.md),
+                    _window_controls()
+                ])
+            
+            appbar = ft.Container(
+                content=header_content,
+                padding=ft.Padding.symmetric(horizontal=Space.lg, vertical=Space.sm),
+                bgcolor=p["bg"],
+                border=ft.Border.only(bottom=ft.BorderSide(1, p["border"]))
+            )
         else:
-            appbar_holder.content = AppBar(p, title="BloodHound", subtitle="File server", trailing=[IconActionButton(p, icon=theme_icon, on_click=cycle_theme, tooltip=theme_tooltip), ft.Container(width=Space.sm), StatusChip(p, "Online" if state.server_running else "Offline", status_tone)])
-        
-        appbar_holder.visible = True
-        body = build_view(state.view, p, state, handlers, page_width=page.width or 1200)
-        body_scroll.controls.clear()
-        body_scroll.controls.append(body)
-        rail_holder.visible = wide
-        navbar_holder.visible = not wide
-        if wide: rail_holder.content = NavSidebar(p, state.view, on_nav, destinations, state=state)
-        else: navbar_holder.content = NavBar(p, state.view, on_nav, destinations)
-        top_spacer = ft.Container(height=top_pad) if top_pad else ft.Container()
-        bottom_pad = 16 if (IS_ANDROID and not wide) else 0
-        bottom_spacer = ft.Container(height=bottom_pad) if bottom_pad else ft.Container()
-        shell = ft.Column([top_spacer, appbar_holder, ft.Row([rail_holder, ft.Container(content=body_scroll, expand=True, bgcolor=p["bg"])], spacing=0, expand=True, vertical_alignment=ft.CrossAxisAlignment.STRETCH), navbar_holder, bottom_spacer], spacing=0, expand=True)
+            # Mobile Header
+            icon_size = 40
+            if state.view == 0:
+                mobile_content = ft.Row(
+                    [
+                        brand_logo,
+                        ft.Container(width=Space.sm),
+                        brand_column,
+                        ft.Container(expand=True),
+                        ft.Container(
+                            content=IconActionButton(p, icon=ft.Icons.HISTORY_ROUNDED, on_click=_nav_to(1), tooltip="Activity", size=icon_size),
+                            padding=ft.Padding.only(bottom=4),
+                        ),
+                        ft.Container(width=Space.sm),
+                        ft.Container(
+                            content=IconActionButton(p, icon=ft.Icons.SETTINGS_ROUNDED, on_click=_nav_to(2), tooltip="Settings", size=icon_size),
+                            padding=ft.Padding.only(bottom=4),
+                        ),
+                        ft.Container(width=Space.sm),
+                        ft.Container(
+                            content=IconActionButton(p, icon=theme_icon, on_click=cycle_theme, tooltip=theme_tooltip, size=icon_size),
+                            padding=ft.Padding.only(bottom=4),
+                        ),
+                    ],
+                    spacing=0,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                )
+                appbar = ft.Container(
+                    content=mobile_content,
+                    padding=ft.Padding.symmetric(horizontal=Space.md, vertical=Space.sm),
+                    bgcolor=p["bg"],
+                    border=ft.Border.only(bottom=ft.BorderSide(1, p["border"]))
+                )
+            else:
+                trailing = [
+                    ft.Container(
+                        content=IconActionButton(p, icon=theme_icon, on_click=cycle_theme, tooltip=theme_tooltip, size=icon_size),
+                        padding=ft.Padding.only(bottom=4),
+                    ),
+                ]
+                back_btn = IconActionButton(p, icon=ft.Icons.ARROW_BACK_ROUNDED, on_click=_nav_to(0), tooltip="Back", size=icon_size)
+                title = "Activity" if state.view == 1 else "Settings"
+                appbar = AppBar(p, title=title, subtitle="", leading=back_btn, trailing=trailing)
+
+        # --- Build Body ---
+        effective_width = width - (SIDEBAR_WIDTH if not is_mobile else 0)
+        body = build_view(state.view, p, state, handlers, page_width=effective_width)
+
+        sidebar = ft.Container()
+        if not is_mobile:
+            sidebar.content = NavSidebar(p, state.view, on_nav, destinations, state=state)
+            sidebar.visible = True
+        else:
+            sidebar.content = None
+            sidebar.visible = False
+
+        if IS_ANDROID and is_mobile:
+            top_pad = _safe_area_top()
+        else:
+            top_pad = 0
+
+        bottom_pad = 16 if (IS_ANDROID and is_mobile) else 0
+
+        top_spacer = ft.Container(height=top_pad) if top_pad > 0 else None
+        bottom_spacer = ft.Container(height=bottom_pad) if bottom_pad > 0 else None
+
+        body_scroll = ft.Column(
+            [body],
+            spacing=0,
+            tight=True,
+            scroll=ft.ScrollMode.AUTO,
+            expand=True,
+        )
+        body_container = ft.Container(
+            content=body_scroll,
+            expand=True,
+            bgcolor=p["bg"],
+            clip_behavior=ft.ClipBehavior.HARD_EDGE,
+        )
+
+        shell_children = [
+            top_spacer,
+            appbar,
+            ft.Row(
+                [sidebar, body_container],
+                spacing=0,
+                expand=True,
+                vertical_alignment=ft.CrossAxisAlignment.STRETCH,
+            ),
+            bottom_spacer,
+        ]
+        shell_children = [c for c in shell_children if c is not None]
+
+        shell = ft.Column(shell_children, spacing=0, expand=True)
         root_holder.content = ft.Container(shell, bgcolor=p["bg"], expand=True)
         safe_update()
 
-    page.on_resize = lambda e: render()
+    # ============================================================
+    # Lifecycle & Resize Handling
+    # ============================================================
+    def on_resize(e):
+        nonlocal _last_wide
+        try:
+            width = page.width or (WINDOW_DEFAULT_WIDTH if not IS_ANDROID else 400)
+            new_wide = width >= BP.md
+            if new_wide != _last_wide:
+                _last_wide = new_wide
+            render()
+        except Exception:
+            pass
+        
+    page.on_resize = on_resize
 
     def on_lifecycle(e: ft.AppLifecycleStateChangeEvent):
         if IS_ANDROID and e.state == ft.AppLifecycleState.RESUME:
@@ -818,8 +941,6 @@ def main(page: Page):
     page.update()
 
     async def _remove_splash_async():
-        import asyncio
-        
         async def _animate_dots():
             try:
                 while not splash_state["removed"]:
@@ -840,30 +961,36 @@ def main(page: Page):
                 pass
 
         dot_task = asyncio.create_task(_animate_dots())
-        await asyncio.sleep(4.0)
-        
-        if not splash_state["removed"]:
-            splash_state["removed"] = True
-            try: await dot_task 
-            except Exception: pass
-            try:
-                page.overlay.clear()
-                page.update()
-            except Exception: pass
-            
         try:
-            w = page.window.width or WINDOW_DEFAULT_WIDTH
-            h = page.window.height or WINDOW_DEFAULT_HEIGHT
-            for _ in range(2):
-                page.window.width = w + 2
-                page.window.height = h + 2
-                page.update()
-                await asyncio.sleep(0.05)
-                page.window.width = w
-                page.window.height = h
-                page.update()
-                await asyncio.sleep(0.05)
-        except Exception: pass
+            await asyncio.sleep(4.0)
+            if not splash_state["removed"]:
+                splash_state["removed"] = True
+                try: await dot_task 
+                except Exception: pass
+                try:
+                    page.overlay.clear()
+                    page.update()
+                except Exception: pass
+
+            if not IS_ANDROID:
+                try:
+                    w = page.window.width or WINDOW_DEFAULT_WIDTH
+                    h = page.window.height or WINDOW_DEFAULT_HEIGHT
+                    for _ in range(2):
+                        page.window.width = w + 2
+                        page.window.height = h + 2
+                        page.update()
+                        await asyncio.sleep(0.05)
+                        page.window.width = w
+                        page.window.height = h
+                        page.update()
+                        await asyncio.sleep(0.05)
+                except Exception: pass
+        finally:
+            try:
+                dot_task.cancel()
+            except Exception:
+                pass
         
     try: 
         page.run_task(_remove_splash_async)
@@ -886,7 +1013,7 @@ def _configure_page(page: ft.Page):
     page.theme = ft.Theme(
         font_family="Inter",
         color_scheme=ft.ColorScheme(
-            primary="#059669", 
+            primary="#18181b", 
             surface="#ffffff",
         ),
         navigation_bar_theme=ft.NavigationBarTheme(
@@ -894,18 +1021,26 @@ def _configure_page(page: ft.Page):
             indicator_color="transparent",
             label_text_style=ft.TextStyle(color="#18181b", size=12, font_family="Inter"),
         ),
+        system_overlay_style=ft.SystemOverlayStyle(
+            status_bar_color="#ffffff",
+            status_bar_icon_brightness=ft.Brightness.DARK,
+        ),
     )
 
     page.dark_theme = ft.Theme(
         font_family="Inter",
         color_scheme=ft.ColorScheme(
-            primary="#10b981", 
+            primary="#fafafa", 
             surface="#000000",
         ),
         navigation_bar_theme=ft.NavigationBarTheme(
             bgcolor="#000000", 
             indicator_color="transparent",
             label_text_style=ft.TextStyle(color="#fafafa", size=12, font_family="Inter"),
+        ),
+        system_overlay_style=ft.SystemOverlayStyle(
+            status_bar_color="#000000",
+            status_bar_icon_brightness=ft.Brightness.LIGHT,
         ),
     )
 

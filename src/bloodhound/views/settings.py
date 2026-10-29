@@ -131,7 +131,7 @@ def build_settings(P, state, handlers, page_width=1200):
     )
 
     # ---- About ----
-    # Use logo image in the About section
+    # Load the logo image for the About section, and make it larger.
     _here = Path(__file__).resolve()
     _asset_candidates = [
         _here.parent.parent.parent / "assets",
@@ -143,9 +143,22 @@ def build_settings(P, state, handlers, page_width=1200):
     
     if assets_dir:
         logo_filename = "logo_dark.png" if state.dark else "logo_light.png"
-        about_icon = ft.Image(src=str(assets_dir / logo_filename), width=24, height=24, fit=ft.BoxFit.CONTAIN)
+        # Enlarge the logo to 48x48
+        about_icon = ft.Container(
+            content=ft.Image(
+                src=str(assets_dir / logo_filename),
+                width=32, height=32,
+                fit=ft.BoxFit.CONTAIN
+            ),
+            width=48, height=48,
+            bgcolor=P["surface_2"],
+            border=ft.Border.all(1, P["border"]),
+            border_radius=Radius.md,
+            alignment=ft.Alignment.CENTER,
+            padding=ft.Padding.all(6),
+        )
     else:
-        about_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=24, color=P["text_muted"])
+        about_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=32, color=P["text_muted"])
 
     about_card = SectionCard(
         P, dark=state.dark,

@@ -46,7 +46,7 @@ def AppBar(P, title, subtitle=None, trailing=None, leading=None):
     left_children = []
     if leading is not None:
         left_children.append(leading)
-        left_children.append(ft.Container(width=Space.sm + 2))
+        left_children.append(ft.Container(width=Space.sm + 4)) # فاصله بهتر بین لوگو و متن
 
     left_children.append(
         ft.Column(
@@ -67,13 +67,26 @@ def AppBar(P, title, subtitle=None, trailing=None, leading=None):
         tight=True,
     )
 
+    # اضافه کردن یک فاصله استاندارد (Space.sm) به انتهای منوی سمت راست
+    trailing_controls = []
+    if trailing:
+        for i, item in enumerate(trailing):
+            trailing_controls.append(item)
+            if i < len(trailing) - 1:
+                # اگر آیتم‌ها IconActionButton باشند، فاصله بینشان را زیاد می‌کنیم
+                if isinstance(item, ft.Container) and getattr(item, 'content', None) and isinstance(getattr(item, 'content', None), ft.Icon):
+                    trailing_controls.append(ft.Container(width=Space.sm))
+                else:
+                    trailing_controls.append(ft.Container(width=Space.sm + 2))
+
     return ft.Container(
         content=ft.Row(
-            [left, ft.Container(expand=True), *(trailing or [])],
+            [left, ft.Container(expand=True), *trailing_controls],
             vertical_alignment=ft.CrossAxisAlignment.CENTER,
         ),
-        padding=ft.Padding.symmetric(
-            horizontal=Space.lg, vertical=Space.md),
+        padding=ft.Padding.only(
+            left=Space.md, right=Space.lg, top=Space.md, bottom=Space.md
+        ), # پدینگ راست بیشتر برای جلوگیری از چسبیدن به لبه
         border=ft.Border.only(bottom=ft.BorderSide(1, P["border"])),
         bgcolor=P["bg"],
     )

@@ -5,7 +5,7 @@ import flet as ft
 
 
 def build_palette(dark: bool) -> dict:
-    """Semantic palette — matches the web UI exactly."""
+    """Semantic palette — matches the web UI exactly (Monochrome)."""
     if dark:
         return {
             # Surfaces
@@ -23,21 +23,21 @@ def build_palette(dark: bool) -> dict:
             "text_dim":       "#d4d4d8",
             "text_muted":     "#71717a",
             "text_faint":     "#52525b",
-            # Accent
-            "primary":        "#10b981",
-            "primary_hover":  "#34d399",
-            "primary_bg":     "#052e1f",
+            # Accent (Monochrome: White in dark mode)
+            "primary":        "#fafafa",
+            "primary_hover":  "#d4d4d8",
+            "primary_bg":     "#1f1f1f",
             "on_primary":     "#000000",
             # Status
-            "success":        "#34d399",
-            "success_bg":     "#052e1f",
+            "success":        "#fafafa",
+            "success_bg":     "#1f1f1f",
             "error":          "#f87171",
             "error_bg":       "#3b0a0a",
             "warning":        "#fbbf24",
             "warning_bg":     "#3b2a05",
             "info":           "#60a5fa",
             "info_bg":        "#082f49",
-            "status_online":  "#10b981",
+            "status_online":  "#fafafa",
             "status_offline": "#71717a",
             # Misc
             "shadow":         "#000000",
@@ -55,24 +55,23 @@ def build_palette(dark: bool) -> dict:
         "text_dim":       "#3f3f46",
         "text_muted":     "#71717a",
         "text_faint":     "#a1a1aa",
-        "primary":        "#059669",
-        "primary_hover":  "#10b981",
-        "primary_bg":     "#ecfdf5",
+        # Accent (Monochrome: Black in light mode)
+        "primary":        "#18181b",
+        "primary_hover":  "#3f3f46",
+        "primary_bg":     "#f4f4f5",
         "on_primary":     "#ffffff",
-        "success":        "#059669",
-        "success_bg":     "#ecfdf5",
+        "success":        "#18181b",
+        "success_bg":     "#f4f4f5",
         "error":          "#dc2626",
         "error_bg":       "#fef2f2",
         "warning":        "#d97706",
         "warning_bg":     "#fffbeb",
         "info":           "#0284c7",
         "info_bg":        "#f0f9ff",
-        "status_online":  "#059669",
+        "status_online":  "#18181b",
         "status_offline": "#a1a1aa",
         "shadow":         "#000000",
     }
 
-
 def card_shadow(dark: bool):
-    """No shadow — flat design."""
     return None

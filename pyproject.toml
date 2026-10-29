@@ -60,8 +60,8 @@ splash_android = "assets/splash_android.png"
 splash_android_dark = "assets/splash_android_dark.png"
 
 [tool.flet.splash]
-color = "#000000"
-dark_color = "#000000"
+color = "#FFFFFF"        # Light theme splash background
+dark_color = "#000000"   # Dark theme splash background
 android_gravity = "fill"
 hide_animation = true
 
