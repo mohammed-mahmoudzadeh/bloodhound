@@ -39,7 +39,6 @@ def run():
 # Splash launch tracker — controls first-run vs. subsequent-run
 # ============================================================
 def _launch_counter_path() -> Path:
-    """Return the path to the small JSON file tracking daily launches."""
     base = Path.home() / ".cache" / "bloodhound"
     try:
         flet_data = os.environ.get("FLET_APP_STORAGE_DATA")
@@ -55,7 +54,6 @@ def _launch_counter_path() -> Path:
 
 
 def _is_first_launch_today() -> bool:
-    """Return True if the app has not been launched yet today."""
     path = _launch_counter_path()
     today = time.strftime("%Y-%m-%d")
     data: dict = {}
@@ -68,7 +66,6 @@ def _is_first_launch_today() -> bool:
     last_day = data.get("day")
     count = int(data.get("count", 0))
 
-    # New day → first launch of the day.
     if last_day != today:
         data = {"day": today, "count": 1}
         try:
@@ -77,7 +74,6 @@ def _is_first_launch_today() -> bool:
             pass
         return True
 
-    # Same day → increment and return False.
     data["count"] = count + 1
     try:
         path.write_text(json.dumps(data), encoding="utf-8")
@@ -102,9 +98,6 @@ def main(page: Page):
 
     _configure_page(page)
 
-    # ============================================================
-    # Splash: initial color matches the system theme to avoid flash
-    # ============================================================
     initial_bg = "#000000" if _system_is_dark(page) else "#fafafa"
     temp_splash = ft.Container(
         bgcolor=initial_bg,
@@ -118,9 +111,6 @@ def main(page: Page):
     except Exception:
         pass
 
-    # ============================================================
-    # Initialize State & Theme
-    # ============================================================
     state = AppState()
     settings_load_error: Exception | None = None
     try:
@@ -154,7 +144,6 @@ def main(page: Page):
     refresh_palette()
 
     def _safe_area_top() -> int:
-        """Return the top safe-area inset (status bar height) in px."""
         if not IS_ANDROID:
             return 0
         try:
@@ -176,9 +165,6 @@ def main(page: Page):
             pass
         return 18
 
-    # ============================================================
-    # Assets
-    # ============================================================
     _here = Path(__file__).resolve()
     _asset_candidates = [
         _here.parent.parent / "assets",
@@ -198,19 +184,11 @@ def main(page: Page):
         logo_filename = "logo_dark.png" if current_dark() else "logo_light.png"
         return str(assets_dir / logo_filename)
 
-    # ============================================================
-    # Splash UI — modern, animated, brand-focused
-    # ============================================================
     p = P()
     splash_icon_src = _get_logo_src()
 
-    # Soft radial glow behind the logo for depth.
-    glow_color = "#10b98122" if current_dark() else "#05966915"
-    glow_radius = 90
-
-    logo_widget: ft.Control
     if splash_icon_src:
-        logo_widget = ft.Image(
+        logo_widget: ft.Control = ft.Image(
             src=splash_icon_src,
             width=150,
             height=150,
@@ -223,91 +201,38 @@ def main(page: Page):
             color=p["primary"],
         )
 
-    logo_with_glow = ft.Stack(
-        [
-            ft.Container(
-                width=glow_radius * 2,
-                height=glow_radius * 2,
-                border_radius=glow_radius,
-                bgcolor=glow_color,
-            ),
-            ft.Container(
-                content=logo_widget,
-                width=glow_radius * 2,
-                height=glow_radius * 2,
-                alignment=ft.Alignment.CENTER,
-            ),
-        ],
-        width=glow_radius * 2,
-        height=glow_radius * 2,
-        alignment=ft.Alignment.CENTER,
-    )
-
     brand_text = ft.Row(
         [
             ft.Text(
-                "Blood",
-                size=34,
-                weight=ft.FontWeight.W_300,
-                color=p["text_muted"],
+                "Blood", size=34, weight=ft.FontWeight.W_300, color=p["text_muted"],
                 font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
             ),
             ft.Text(
-                "Hound",
-                size=34,
-                weight=ft.FontWeight.W_800,
-                color=p["text"],
+                "Hound", size=34, weight=ft.FontWeight.W_800, color=p["text"],
                 font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
                 style=ft.TextStyle(letter_spacing=3),
             ),
         ],
-        spacing=0,
-        alignment=ft.MainAxisAlignment.CENTER,
-        tight=True,
+        spacing=0, alignment=ft.MainAxisAlignment.CENTER, tight=True,
     )
 
     subtitle_text = ft.Text(
-        "Share files over your local network",
-        size=14,
-        color=p["text_muted"],
-        weight=ft.FontWeight.W_400,
-        text_align=ft.TextAlign.CENTER,
+        "Share files over your local network", size=14, color=p["text_muted"],
+        weight=ft.FontWeight.W_400, text_align=ft.TextAlign.CENTER,
         style=ft.TextStyle(letter_spacing=1.2),
     )
 
-    # Wave-style loading dots (more modern than the classic pulse).
-    dot1 = ft.Container(
-        width=8, height=8, border_radius=4,
-        bgcolor=p["text_muted"],
-        animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT),
-        opacity=0.2,
-    )
-    dot2 = ft.Container(
-        width=8, height=8, border_radius=4,
-        bgcolor=p["text_muted"],
-        animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT),
-        opacity=0.2,
-    )
-    dot3 = ft.Container(
-        width=8, height=8, border_radius=4,
-        bgcolor=p["text_muted"],
-        animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT),
-        opacity=0.2,
-    )
+    dot1 = ft.Container(width=8, height=8, border_radius=4, bgcolor=p["text_muted"], animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT), opacity=0.2)
+    dot2 = ft.Container(width=8, height=8, border_radius=4, bgcolor=p["text_muted"], animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT), opacity=0.2)
+    dot3 = ft.Container(width=8, height=8, border_radius=4, bgcolor=p["text_muted"], animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT), opacity=0.2)
 
-    dots_container = ft.Row(
-        [dot1, dot2, dot3],
-        alignment=ft.MainAxisAlignment.CENTER,
-        spacing=10,
-        height=24,
-        tight=True,
-    )
+    dots_container = ft.Row([dot1, dot2, dot3], alignment=ft.MainAxisAlignment.CENTER, spacing=10, height=24, tight=True)
 
     splash_layer = ft.Container(
         content=ft.Column(
             [
                 ft.Container(expand=True),
-                logo_with_glow,
+                logo_widget,
                 ft.Container(height=32),
                 brand_text,
                 ft.Container(height=10),
@@ -316,14 +241,9 @@ def main(page: Page):
                 dots_container,
                 ft.Container(height=56),
             ],
-            spacing=0,
-            tight=True,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER,
         ),
-        bgcolor=p["bg"],
-        alignment=ft.Alignment.CENTER,
-        expand=True,
+        bgcolor=p["bg"], alignment=ft.Alignment.CENTER, expand=True,
     )
 
     try:
@@ -335,7 +255,7 @@ def main(page: Page):
         page.update()
     except Exception:
         pass
-    
+
     if IS_ANDROID:
         try:
             from jnius import autoclass  # type: ignore[import-not-found]
@@ -345,9 +265,6 @@ def main(page: Page):
         except Exception:
             pass
 
-    # ============================================================
-    # Services & Handlers Setup
-    # ============================================================
     file_picker = ft.FilePicker()
     ph = None
     try:
@@ -396,9 +313,6 @@ def main(page: Page):
         except Exception: pass
     atexit.register(shutdown_server)
 
-    # ============================================================
-    # Core Logic
-    # ============================================================
     def on_minimize(e=None):
         try:
             page.window.minimized = True
@@ -475,10 +389,16 @@ def main(page: Page):
         return ft.Icons.DARK_MODE_ROUNDED, "Theme: Dark"
 
     def _pick_default_index(interfaces):
-        for i, (_, ip) in enumerate(interfaces):
-            if ip.startswith("192.168."): return i
-        for i, (_, ip) in enumerate(interfaces):
-            if ip == "127.0.0.1": return i
+        private_prefixes = ("192.168.", "10.", "172.16.", "172.17.", "172.18.",
+                            "172.19.", "172.20.", "172.21.", "172.22.", "172.23.",
+                            "172.24.", "172.25.", "172.26.", "172.27.", "172.28.",
+                            "172.29.", "172.30.", "172.31.")
+        for i, (label, ip) in enumerate(interfaces):
+            if label == "Wi-Fi" or any(ip.startswith(p) for p in private_prefixes):
+                return i
+        for i, (label, ip) in enumerate(interfaces):
+            if ip == "127.0.0.1":
+                return i
         return 0
 
     def _find_index_for_ip(interfaces, target_ip):
@@ -489,37 +409,44 @@ def main(page: Page):
     def _apply_interfaces(interfaces):
         old_ip = state.iface_ip
         state.interfaces = interfaces
+        if not interfaces:
+            return
+
+        wifi_idx = -1
+        for i, (label, ip) in enumerate(interfaces):
+            if label == "Wi-Fi" or ip.startswith("192.168.") or ip.startswith("10."):
+                wifi_idx = i
+                break
+
         if not state.iface_picked:
             state.iface_index = _pick_default_index(interfaces)
             state.iface_picked = True
+        elif wifi_idx >= 0 and state.iface_ip == "0.0.0.0":
+            state.iface_index = wifi_idx
         else:
             idx = _find_index_for_ip(interfaces, old_ip)
-            if idx >= 0: state.iface_index = idx
-            elif not (0 <= state.iface_index < len(interfaces)): state.iface_index = 0
-        if interfaces:
-            label, ip = interfaces[state.iface_index]
-            state.iface_label = label
-            state.iface_ip = ip
+            if idx >= 0:
+                state.iface_index = idx
+            else:
+                state.iface_index = _pick_default_index(interfaces)
 
-    def refresh_ip(e=None):
-        def _work():
-            try:
-                ips = get_all_ips()
-                def _apply():
-                    _apply_interfaces(ips)
-                    log(f"Detected {len(ips)} interfaces — {state.iface_label} · {state.iface_ip}", "ok")
-                    render()
-                try:
-                    page.run_task(_apply)
-                except Exception as ex:
-                    log(f"Could not schedule UI update: {ex}", "warn")
-                    _apply_interfaces(ips)
-                    try:
-                        safe_update()
-                    except Exception:
-                        pass
-            except Exception as ex: log(f"Refresh failed: {ex}", "err")
-        threading.Thread(target=_work, daemon=True).start()
+        label, ip = interfaces[state.iface_index]
+        state.iface_label = label
+        state.iface_ip = ip
+
+    # --- refresh_ip is now async so ActionButton can show a spinner ---
+    async def refresh_ip(e=None):
+        try:
+            # Run the blocking scan in a background thread
+            loop = asyncio.get_running_loop()
+            ips = await loop.run_in_executor(None, get_all_ips)
+            _apply_interfaces(ips)
+            log(f"Detected {len(ips)} interfaces — {state.iface_label} · {state.iface_ip}", "ok")
+            render()
+            # Give Flet a moment to flush the update.
+            await asyncio.sleep(0.05)
+        except Exception as ex:
+            log(f"Refresh failed: {ex}", "err")
 
     def on_iface_change(index: int):
         if not (0 <= index < len(state.interfaces)): return
@@ -548,7 +475,7 @@ def main(page: Page):
             except Exception as ex: log(f"Restart failed: {ex}", "err")
         render()
 
-    def toggle_server(e=None):
+    async def toggle_server(e=None):
         if server.is_alive():
             server.stop()
             state.server_running = False
@@ -573,7 +500,7 @@ def main(page: Page):
             server.bind_host = bind_host
             log(f"Starting server on {bind_host}:{port}…", "info")
             server.start()
-            time.sleep(0.4)
+            await asyncio.sleep(0.4)
             if server.is_alive():
                 state.server_running = True
                 log(f"Server running on {bind_host}:{port}", "ok")
@@ -616,12 +543,36 @@ def main(page: Page):
             if not p.exists() or not p.is_dir():
                 log(f"Not a folder: {p}", "err")
                 return
-            if server.is_alive():
+
+            was_running = server.is_alive()
+
+            if was_running:
                 server.stop()
                 state.server_running = False
+                time.sleep(0.3)
+
             state.share_dir = str(p)
             persist_settings()
             log(f"Folder: {p}", "ok")
+
+            if was_running:
+                log("Restarting server on new folder…", "warn")
+                try:
+                    port = int(state.port)
+                    bind_host = state.bind_host
+                    server.share_dir = state.share_dir
+                    server.port = port
+                    server.bind_host = bind_host
+                    server.start()
+                    time.sleep(0.4)
+                    if server.is_alive():
+                        state.server_running = True
+                        log(f"Server running on {bind_host}:{port}", "ok")
+                        log(f"Open: {state.access_url}", "info")
+                except Exception as ex:
+                    log(f"Restart failed: {ex}", "err")
+                    state.server_running = False
+
             render()
         except Exception as ex: log(f"Error: {ex}", "err")
 
@@ -793,7 +744,6 @@ def main(page: Page):
         except (ValueError, TypeError):
             pass
 
-    # Debounce device-name writes so we don't hit disk per keystroke.
     _device_name_timer: dict[str, Any] = {"id": None}
 
     def set_device_name(value: str):
@@ -815,19 +765,21 @@ def main(page: Page):
 
     handlers: Dict[str, Callable[..., Any]] = {
         "log": log, "cycle_theme": cycle_theme, "set_theme": set_theme,
-        "toggle_server": toggle_server, "pick_folder": lambda: run_async(pick_folder, None),
-        "share_all": lambda: run_async(share_all, None), "request_permissions": lambda: run_async(request_permissions, None),
-        "request_battery_exemption": lambda: run_async(request_battery_exemption, None),
-        "refresh_ip": refresh_ip, "copy_url": lambda: run_async(copy_url, None),
-        "open_url": lambda: run_async(open_url, None), "show_qr": lambda: run_async(show_qr, None),
+        "toggle_server": toggle_server,
+        "pick_folder": pick_folder,
+        "share_all": share_all,
+        "request_permissions": request_permissions,
+        "request_battery_exemption": request_battery_exemption,
+        "refresh_ip": refresh_ip,
+        "copy_url": lambda e=None: run_async(copy_url, e),
+        "open_url": lambda e=None: run_async(open_url, e),
+        "show_qr": lambda e=None: run_async(show_qr, e),
         "on_iface_change": on_iface_change,
         "set_port": set_port,
         "set_device_name": set_device_name,
+        "_get_url": lambda: state.access_url,
     }
 
-    # ============================================================
-    # Render Function (Responsive)
-    # ============================================================
     root_holder = ft.Container(expand=True)
     destinations = [
         {"icon": ft.Icons.GRID_VIEW_ROUNDED, "label": "Dashboard"},
@@ -880,7 +832,6 @@ def main(page: Page):
             spacing=2, tight=True
         )
 
-        # --- Build Header ---
         if not is_mobile:
             header_left = ft.Row(
                 [brand_logo, ft.Container(width=Space.md), brand_column],
@@ -972,7 +923,6 @@ def main(page: Page):
                 title = "Activity" if state.view == 1 else "Settings"
                 appbar = AppBar(p, title=title, subtitle="", leading=back_btn, trailing=trailing)
 
-        # --- Build Body ---
         effective_width = int(width - (SIDEBAR_WIDTH if not is_mobile else 0))
         body = build_view(state.view, p, state, handlers, page_width=effective_width)
 
@@ -1026,9 +976,6 @@ def main(page: Page):
         root_holder.content = ft.Container(shell, bgcolor=p["bg"], expand=True)
         safe_update()
 
-    # ============================================================
-    # Lifecycle & Resize Handling
-    # ============================================================
     def on_resize(e):
         nonlocal _last_wide
         try:
@@ -1079,18 +1026,16 @@ def main(page: Page):
     else:
         log("Pick a folder to start.", "info")
 
+    run_async(refresh_ip)
+
     page.add(root_holder)
     render()
-    refresh_ip()
     page.update()
 
-    # ============================================================
-    # Splash removal — first launch of the day shows for longer
-    # ============================================================
     first_today = _is_first_launch_today()
 
-    SPLASH_MIN_SHOW_FIRST = 5.0     # First launch of the day
-    SPLASH_MIN_SHOW_RETURN = 3    # Subsequent launches
+    SPLASH_MIN_SHOW_FIRST = 5.0
+    SPLASH_MIN_SHOW_RETURN = 3.0
     SPLASH_MAX_WAIT = 10.0
 
     splash_min_show = SPLASH_MIN_SHOW_FIRST if first_today else SPLASH_MIN_SHOW_RETURN
@@ -1100,7 +1045,6 @@ def main(page: Page):
         async def _animate_dots():
             try:
                 while not splash_state["removed"]:
-                    # Wave 1
                     dot1.opacity = 1.0
                     dot2.opacity = 0.3
                     dot3.opacity = 0.2
@@ -1109,7 +1053,6 @@ def main(page: Page):
                     await asyncio.sleep(0.25)
                     if splash_state["removed"]: break
 
-                    # Wave 2
                     dot1.opacity = 0.3
                     dot2.opacity = 1.0
                     dot3.opacity = 0.2
@@ -1118,7 +1061,6 @@ def main(page: Page):
                     await asyncio.sleep(0.25)
                     if splash_state["removed"]: break
 
-                    # Wave 3
                     dot1.opacity = 0.2
                     dot2.opacity = 0.3
                     dot3.opacity = 1.0
@@ -1127,7 +1069,7 @@ def main(page: Page):
                     await asyncio.sleep(0.25)
             except Exception:
                 pass
-        
+
         dot_task = asyncio.create_task(_animate_dots())
         start_time = time.time()
 
@@ -1188,13 +1130,9 @@ def _configure_page(page: ft.Page):
 
     page.theme = ft.Theme(
         font_family="Inter",
-        color_scheme=ft.ColorScheme(
-            primary="#18181b",
-            surface="#ffffff",
-        ),
+        color_scheme=ft.ColorScheme(primary="#18181b", surface="#ffffff"),
         navigation_bar_theme=ft.NavigationBarTheme(
-            bgcolor="#ffffff",
-            indicator_color="transparent",
+            bgcolor="#ffffff", indicator_color="transparent",
             label_text_style=ft.TextStyle(color="#18181b", size=12, font_family="Inter"),
         ),
         system_overlay_style=ft.SystemOverlayStyle(
@@ -1202,16 +1140,11 @@ def _configure_page(page: ft.Page):
             status_bar_icon_brightness=ft.Brightness.DARK,
         ),
     )
-
     page.dark_theme = ft.Theme(
         font_family="Inter",
-        color_scheme=ft.ColorScheme(
-            primary="#fafafa",
-            surface="#000000",
-        ),
+        color_scheme=ft.ColorScheme(primary="#fafafa", surface="#000000"),
         navigation_bar_theme=ft.NavigationBarTheme(
-            bgcolor="#000000",
-            indicator_color="transparent",
+            bgcolor="#000000", indicator_color="transparent",
             label_text_style=ft.TextStyle(color="#fafafa", size=12, font_family="Inter"),
         ),
         system_overlay_style=ft.SystemOverlayStyle(
