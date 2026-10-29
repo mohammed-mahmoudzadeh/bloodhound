@@ -19,7 +19,7 @@
 <p align="center">
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/python-3.10%2B-blue.svg" alt="Python"></a>
   <a href="https://flet.dev/"><img src="https://img.shields.io/badge/Flet-1.0.4-02569B.svg" alt="Flet"></a>
-  <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/Flask-3.0-000000.svg" alt="Flask"></a>
+  <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/Flask-3.0-3BABC3.svg" alt="Flask"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/platform-Android%20%7C%20Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg" alt="Platforms">
   <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/stargazers"><img src="https://img.shields.io/github/stars/mohammed-mahmoudzadeh/bloodhound?style=social" alt="Stars"></a>
@@ -442,7 +442,7 @@ This project is licensed under the MIT License — see the LICENSE file for deta
 ---
 
 <p align="center">
-  <em>Made with ❤️ for the local-first community.</em>
+  <em>Made with care for the local-first community.</em>
 </p>
 
 <p align="center">
