@@ -1,12 +1,31 @@
 """Flask server wrapper — runs the web UI in a background thread."""
 from __future__ import annotations
 
+import socket
 import threading
 
 from werkzeug.serving import ThreadedWSGIServer
 
 from .share import create_app
 from .share.config import set_share_dir, set_port
+
+
+class PortInUseError(OSError):
+    """Raised when the requested port is already bound by another process."""
+
+
+def _port_is_free(host: str, port: int) -> bool:
+    """Return True if we can bind (host, port) right now.
+
+    Uses SO_REUSEADDR so it mirrors the actual server binding behaviour.
+    """
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            s.bind((host, port))
+        except OSError:
+            return False
+    return True
 
 
 class FlaskServer:
@@ -27,6 +46,13 @@ class FlaskServer:
             return
         if not self.share_dir:
             raise RuntimeError("No share directory selected.")
+
+        # Fail fast with a clear, catchable error when the port is busy.
+        # This prevents the WSGI server from being half-constructed and
+        # leaves no dangling daemon thread behind.
+        if not _port_is_free(self.bind_host, self.port):
+            self.last_error = f"Port {self.port} is already in use."
+            raise PortInUseError(self.last_error)
 
         # Build the app once, reuse on restart
         if self._app is None:

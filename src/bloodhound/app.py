@@ -27,7 +27,7 @@ from .components import (
     AppBar, NavBar, NavSidebar, StatusChip, IconActionButton,
 )
 from .core.network import get_all_ips
-from .core.server import FlaskServer
+from .core.server import FlaskServer, PortInUseError
 from .views import build_view
 
 
@@ -493,7 +493,31 @@ def main(page: Page):
             log("Invalid port — using 8000.", "warn")
             state.port = "8000"
             port = 8000
+
+        # ---- Always re-scan interfaces before binding ----
+        # The previous state.interfaces list may be stale (Wi-Fi dropped,
+        # IP renewed, etc.) since the app launched. get_all_ips() runs in
+        # an executor, so it does not block the UI thread.
+        try:
+            loop = asyncio.get_running_loop()
+            ips = await loop.run_in_executor(None, get_all_ips)
+            if ips:
+                _apply_interfaces(ips)
+                persist_settings()
+        except Exception as ex:
+            log(f"Interface refresh failed: {ex}", "warn")
+
+        valid_ips = {ip for _, ip in state.interfaces}
+        if state.iface_ip not in valid_ips:
+            # Safe fallback: bind to loopback only (local access).
+            log("No LAN interface available — binding to 127.0.0.1 (local only).", "warn")
+            state.iface_label = "Localhost"
+            state.iface_ip = "127.0.0.1"
+            idx = _find_index_for_ip(state.interfaces, "127.0.0.1")
+            state.iface_index = idx if idx >= 0 else 0
+
         bind_host = state.bind_host
+
         try:
             server.share_dir = state.share_dir
             server.port = port
@@ -516,15 +540,51 @@ def main(page: Page):
             else:
                 log("Server failed to start — check logs.", "err")
                 state.server_running = False
-        except OSError as ex:
-            if "Address already in use" in str(ex): log(f"Port {port} is busy. Try another.", "err")
-            else: log(f"OS error: {ex}", "err")
+        except PortInUseError:
+            log(
+                f"Port {port} is already in use. "
+                f"Stop the other program or pick a different port.",
+                "err",
+            )
             state.server_running = False
+        except OSError as ex:
+            if "Address already in use" in str(ex):
+                log(f"Port {port} is busy. Try another.", "err")
+            elif "Cannot assign requested address" in str(ex):
+                # Safety net: bind host turned out to be invalid despite the
+                # pre-check. Retry once on loopback (always bindable, safe).
+                log(f"Bind address unavailable ({bind_host}) — retrying on 127.0.0.1…", "warn")
+                try:
+                    server.bind_host = "127.0.0.1"
+                    state.iface_label = "Localhost"
+                    state.iface_ip = "127.0.0.1"
+                    server.start()
+                    await asyncio.sleep(0.4)
+                    if server.is_alive():
+                        state.server_running = True
+                        log(f"Server running on 127.0.0.1:{port} (local only)", "ok")
+                        log(f"Open: {state.access_url}", "info")
+                    else:
+                        state.server_running = False
+                except PortInUseError:
+                    log(
+                        f"Port {port} is already in use. "
+                        f"Stop the other program or pick a different port.",
+                        "err",
+                    )
+                    state.server_running = False
+                except Exception as ex2:
+                    log(f"Fallback failed: {type(ex2).__name__}: {ex2}", "err")
+                    state.server_running = False
+            else:
+                log(f"OS error: {ex}", "err")
+            if not state.server_running:
+                state.server_running = False
         except Exception as ex:
             log(f"Failed: {type(ex).__name__}: {ex}", "err")
             state.server_running = False
         render()
-
+    
     async def pick_folder(e=None):
         log("Opening folder picker…", "info")
         try:
@@ -569,10 +629,16 @@ def main(page: Page):
                         state.server_running = True
                         log(f"Server running on {bind_host}:{port}", "ok")
                         log(f"Open: {state.access_url}", "info")
-                except Exception as ex:
-                    log(f"Restart failed: {ex}", "err")
+                except PortInUseError:
+                    log(
+                        f"Port {state.port} is already in use. "
+                        f"Stop the other program or pick a different port.",
+                        "err",
+                    )
                     state.server_running = False
-
+                except Exception as ex:
+                    log(f"Server start failed: {ex}", "err")
+                    state.server_running = False
             render()
         except Exception as ex: log(f"Error: {ex}", "err")
 
@@ -768,8 +834,8 @@ def main(page: Page):
         "toggle_server": toggle_server,
         "pick_folder": pick_folder,
         "share_all": share_all,
-        "request_permissions": request_permissions,
-        "request_battery_exemption": request_battery_exemption,
+        "request_permissions": lambda e=None: run_async(request_permissions, e),
+        "request_battery_exemption": lambda e=None: run_async(request_battery_exemption, e),
         "refresh_ip": refresh_ip,
         "copy_url": lambda e=None: run_async(copy_url, e),
         "open_url": lambda e=None: run_async(open_url, e),

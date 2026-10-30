@@ -207,7 +207,7 @@ def build_dashboard(P, state, handlers, page_width=1200):
     # ============================================================
     # Hero — access URL
     # ============================================================
-    link_icon_size = 26 if is_narrow else 28
+    link_icon_size = 30 if is_narrow else 28
     url_text_size = 17 if is_narrow else 20
     url_gap = Space.md
 
@@ -417,15 +417,32 @@ def build_dashboard(P, state, handlers, page_width=1200):
             spacing=0, tight=True, expand=True,
         )
     else:
+        placeholder_icon = ft.Container(
+            content=ft.Icon(ft.Icons.ADD_ROUNDED, size=26, color=P["text_muted"]),
+            width=52, height=52,
+            border_radius=Radius.md,
+            bgcolor=P["surface_2"],
+            border=ft.Border.all(1, P["border"]),
+            alignment=ft.Alignment.CENTER,
+        )
+
         placeholder = ft.Container(
             content=ft.Row(
                 [
-                    ft.Container(content=ft.Icon(ft.Icons.FOLDER_OFF_ROUNDED, size=24, color=P["text_faint"]),
-                                 width=44, height=44, alignment=ft.Alignment.CENTER),
+                    placeholder_icon,
                     ft.Container(width=Space.md),
-                    ft.Text("Select a folder to start sharing", color=P["text_faint"],
-                            size=13, italic=True, max_lines=2,
-                            overflow=ft.TextOverflow.ELLIPSIS, expand=True),
+                    ft.Column(
+                        [
+                            ft.Text("No folder selected", color=P["text"], size=14,
+                                    weight=ft.FontWeight.W_600, max_lines=1,
+                                    overflow=ft.TextOverflow.ELLIPSIS),
+                            ft.Container(height=2),
+                            ft.Text("Pick a folder to start sharing", color=P["text_muted"],
+                                    size=11, weight=ft.FontWeight.W_400, max_lines=2,
+                                    overflow=ft.TextOverflow.ELLIPSIS),
+                        ],
+                        spacing=0, tight=True, expand=True,
+                    ),
                 ],
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
