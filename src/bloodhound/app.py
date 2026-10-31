@@ -24,7 +24,7 @@ from .state import AppState
 from .settings_store import load_settings, save_settings
 from .theme import BP, Space, Radius, build_palette
 from .components import (
-    AppBar, NavBar, NavSidebar, StatusChip, IconActionButton,
+    AppBar, NavSidebar, StatusChip, IconActionButton,
 )
 from .core.network import get_all_ips
 from .core.server import FlaskServer, PortInUseError
@@ -190,27 +190,27 @@ def main(page: Page):
     if splash_icon_src:
         logo_widget: ft.Control = ft.Image(
             src=splash_icon_src,
-            width=150,
-            height=150,
+            width=200, # Slightly larger, but not overwhelming
+            height=200,
             fit=ft.BoxFit.CONTAIN,
         )
     else:
         logo_widget = ft.Icon(
             ft.Icons.FOLDER_SHARED_ROUNDED,
-            size=150,
+            size=200,
             color=p["primary"],
         )
 
     brand_text = ft.Row(
         [
             ft.Text(
-                "Blood", size=34, weight=ft.FontWeight.W_300, color=p["text_muted"],
+                "Blood", size=38, weight=ft.FontWeight.W_500, color=p["text_muted"],
                 font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
             ),
             ft.Text(
-                "Hound", size=34, weight=ft.FontWeight.W_800, color=p["text"],
+                "Hound", size=38, weight=ft.FontWeight.W_900, color=p["text"],
                 font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
-                style=ft.TextStyle(letter_spacing=3),
+                style=ft.TextStyle(letter_spacing=3.5),
             ),
         ],
         spacing=0, alignment=ft.MainAxisAlignment.CENTER, tight=True,
@@ -219,29 +219,38 @@ def main(page: Page):
     subtitle_text = ft.Text(
         "Share files over your local network", size=14, color=p["text_muted"],
         weight=ft.FontWeight.W_400, text_align=ft.TextAlign.CENTER,
-        style=ft.TextStyle(letter_spacing=1.2),
+        style=ft.TextStyle(letter_spacing=2.0),
     )
 
     dot1 = ft.Container(width=8, height=8, border_radius=4, bgcolor=p["text_muted"], animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT), opacity=0.2)
-    dot2 = ft.Container(width=8, height=8, border_radius=4, bgcolor=p["text_muted"], animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT), opacity=0.2)
+    dot2 = ft.Container(width=8, height=8, border_radius=4, bgcolor=p["text_muted"], animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT), opacity=0.4)
     dot3 = ft.Container(width=8, height=8, border_radius=4, bgcolor=p["text_muted"], animate_opacity=ft.Animation(500, ft.AnimationCurve.EASE_IN_OUT), opacity=0.2)
 
-    dots_container = ft.Row([dot1, dot2, dot3], alignment=ft.MainAxisAlignment.CENTER, spacing=10, height=24, tight=True)
+    dots_container = ft.Row([dot1, dot2, dot3], alignment=ft.MainAxisAlignment.CENTER, spacing=12, height=24, tight=True)
 
     splash_layer = ft.Container(
         content=ft.Column(
             [
-                ft.Container(expand=True),
+                # --- Top space: visually smaller (optical center) ---
+                ft.Container(expand=5),
+                
+                # --- Center: logo ---
                 logo_widget,
-                ft.Container(height=32),
+                
+                # --- Bottom space: visually larger to balance the text below ---
+                ft.Container(expand=6),
+                
+                # --- Text + dots pinned to the bottom ---
                 brand_text,
                 ft.Container(height=10),
                 subtitle_text,
-                ft.Container(expand=True),
+                ft.Container(height=40),
                 dots_container,
-                ft.Container(height=56),
+                ft.Container(height=64), # Safe bottom padding for mobile
             ],
-            spacing=0, tight=True, horizontal_alignment=ft.CrossAxisAlignment.CENTER, alignment=ft.MainAxisAlignment.CENTER,
+            spacing=0, tight=True, 
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER, 
+            alignment=ft.MainAxisAlignment.CENTER,
         ),
         bgcolor=p["bg"], alignment=ft.Alignment.CENTER, expand=True,
     )
@@ -791,8 +800,13 @@ def main(page: Page):
             log("Dialog failed.", "err")
 
     def on_nav(e):
-        try: state.view = e.control.selected_index
-        except AttributeError: state.view = getattr(e, "selected_index", 0)
+        if isinstance(e, int):
+            state.view = e
+        else:
+            try:
+                state.view = e.control.selected_index
+            except AttributeError:
+                state.view = getattr(e, "selected_index", 0)
         render()
 
     def _nav_to(index: int):
@@ -800,7 +814,7 @@ def main(page: Page):
             state.view = index
             render()
         return handler
-
+    
     def set_port(value: str):
         try:
             port_int = int(value)
@@ -854,7 +868,7 @@ def main(page: Page):
     ]
 
     _last_wide: bool | None = None
-    SIDEBAR_WIDTH = 180
+    SIDEBAR_WIDTH = 200
 
     def render():
         nonlocal _last_wide
@@ -874,28 +888,34 @@ def main(page: Page):
         theme_icon, theme_tooltip = _theme_icon()
 
         logo_src = _get_logo_src()
+        
+        # Responsive sizes for mobile vs desktop
+        logo_size = 52 if is_mobile else 64
+        brand_size = 22 if is_mobile else 24
+
         if logo_src:
             brand_logo: ft.Control = ft.Image(
                 src=logo_src,
-                width=44,
-                height=44,
+                width=logo_size,
+                height=logo_size,
                 fit=ft.BoxFit.CONTAIN,
             )
         else:
-            brand_logo = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=44, color=p["text"])
+            brand_logo = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=logo_size, color=p["text"])
 
         brand_column = ft.Column(
             [
                 ft.Row(
                     [
-                        ft.Text("Blood", size=20, weight=ft.FontWeight.W_400, color=p["text_muted"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
-                        ft.Text("Hound", size=20, weight=ft.FontWeight.W_700, color=p["text"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
+                        ft.Text("Blood", size=brand_size, weight=ft.FontWeight.W_500, color=p["text_muted"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
+                        ft.Text("Hound", size=brand_size, weight=ft.FontWeight.W_900, color=p["text"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
                     ],
                     spacing=0, tight=True
                 ),
-                ft.Text("File server", size=13, color=p["text_muted"])
             ],
-            spacing=2, tight=True
+            spacing=0,
+            tight=True,
+            alignment=ft.MainAxisAlignment.CENTER
         )
 
         if not is_mobile:
@@ -906,7 +926,7 @@ def main(page: Page):
                 tight=True,
             )
 
-            icon_size = 40
+            icon_size = 44 if not is_narrow_desktop else 40
             header_content = ft.Row(
                 [
                     ft.WindowDragArea(content=header_left, maximizable=True),
@@ -946,7 +966,7 @@ def main(page: Page):
                 border=ft.Border.only(bottom=ft.BorderSide(1, p["border"]))
             )
         else:
-            icon_size = 40
+            icon_size = 38
             if state.view == 0:
                 mobile_content = ft.Row(
                     [

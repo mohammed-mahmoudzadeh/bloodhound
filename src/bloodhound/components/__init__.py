@@ -6,7 +6,7 @@ from .cards import SectionCard, AppBar
 from .inputs import LabeledField, TextInput
 from .chips import StatusChip
 from .rows import LogRow
-from .navigation import NavSidebar, NavBar, NavRail
+from .navigation import NavSidebar
 from .layout import vspace, centered_content
 
 __all__ = [

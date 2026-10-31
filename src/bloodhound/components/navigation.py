@@ -1,162 +1,174 @@
-"""Adaptive navigation — sidebar on desktop, floating bar on mobile."""
+"""Sidebar navigation component — modern, minimal, and balanced."""
 from __future__ import annotations
+
+import asyncio
 
 import flet as ft
 
-from ..theme import Space, Radius, Type
+from ..theme import Space, Radius
 
 
-def NavSidebar(P, selected_index, on_change, destinations, state=None):
-    """Sidebar for desktop. Brand is in the top bar; sidebar holds nav + status."""
-    items = []
-    for i, d in enumerate(destinations):
-        selected = (i == selected_index)
-        if selected:
-            bg = P["surface_2"]
-            fg = P["text"]
-            icon_color = P["text"]
-        else:
-            bg = "transparent"
-            fg = P["text_dim"]
-            icon_color = P["text_muted"]
+def NavSidebar(P, selected_index, on_change, items, state=None):
+    """Modern sidebar with subtle active indicators and hover effects."""
 
-        item = ft.Container(
+    def _nav_item(index, icon, label):
+        is_active = selected_index == index
+
+        text_color = P["text"] if is_active else P["text_muted"]
+        icon_color = P["primary"] if is_active else P["text_muted"]
+        bg_color = P["surface_2"] if is_active else "transparent"
+        font_weight = ft.FontWeight.W_600 if is_active else ft.FontWeight.W_500
+
+        indicator = ft.Container(
+            width=3,
+            height=18,
+            border_radius=ft.BorderRadius.only(top_right=4, bottom_right=4),
+            bgcolor=P["primary"] if is_active else "transparent",
+            animate=ft.Animation(200, ft.AnimationCurve.EASE_OUT),
+        )
+
+        icon_widget = ft.Icon(icon, size=20, color=icon_color)
+        text_widget = ft.Text(label, size=14, color=text_color, weight=font_weight)
+
+        item_content = ft.Container(
             content=ft.Row(
                 [
-                    ft.Icon(d["icon"], size=22, color=icon_color),
+                    indicator,
+                    ft.Container(width=Space.sm),
+                    icon_widget,
                     ft.Container(width=Space.md),
-                    ft.Text(
-                        d["label"],
-                        size=14,
-                        weight=ft.FontWeight.W_500 if selected else ft.FontWeight.W_400,
-                        color=fg,
-                    ),
+                    text_widget,
                 ],
                 spacing=0,
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
             ),
-            padding=ft.Padding.symmetric(horizontal=Space.md, vertical=12),
-            margin=ft.Margin.symmetric(horizontal=Space.sm, vertical=2),
-            bgcolor=bg,
+            padding=ft.Padding.symmetric(vertical=10, horizontal=Space.md),
             border_radius=Radius.md,
+            bgcolor=bg_color,
             ink=True,
-            on_click=lambda e, idx=i: _dispatch_nav(on_change, idx),
-            animate=ft.Animation(150, ft.AnimationCurve.EASE_OUT),
+            on_click=lambda e: on_change(index),
+            animate=ft.Animation(200, ft.AnimationCurve.EASE_OUT),
         )
-        items.append(item)
 
-    nav_block = ft.Container(
-        content=ft.Column(items, spacing=0, tight=True),
-        padding=ft.Padding.symmetric(vertical=Space.md),
-    )
+        if not is_active:
+            def _on_hover(e):
+                try:
+                    if e.data == "true":
+                        item_content.bgcolor = P["surface"]
+                        icon_widget.color = P["text_dim"]
+                        text_widget.color = P["text_dim"]
+                    else:
+                        item_content.bgcolor = "transparent"
+                        icon_widget.color = P["text_muted"]
+                        text_widget.color = P["text_muted"]
+                    item_content.update()
+                except Exception:
+                    pass
+            item_content.on_hover = _on_hover
 
-    is_online = bool(state and state.server_running)
-    status_color = P["status_online"] if is_online else P["status_offline"]
+        return item_content
 
-    status_dot = ft.Container(
-        width=8, height=8, 
-        border_radius=4, 
-        bgcolor=status_color,
-        animate=ft.Animation(200, ft.AnimationCurve.EASE_OUT),
-        shadow=ft.BoxShadow(
-            blur_radius=6 if is_online else 0,
-            color=status_color,
-            spread_radius=1,
-        ) if is_online else None,
-    )
+    nav_items = []
+    for i, item in enumerate(items):
+        nav_items.append(_nav_item(i, item["icon"], item["label"]))
+        if i < len(items) - 1:
+            nav_items.append(ft.Container(height=2))
 
-    status_label = ft.Text(
-        "Online" if is_online else "Offline",
-        size=13,
-        weight=ft.FontWeight.W_600,
-        color=P["status_online"] if is_online else P["text_dim"],
-    )
+    # ----- Footer: server status with pulsing online dot -----
+    footer_controls = []
+    pulse_target = {"control": None}
 
-    port_label = ft.Text(
-        f"Port {state.port}" if state else "Port 8000",
-        size=12,
-        color=P["text_muted"],
-    )
+    if state is not None:
+        server_running = getattr(state, "server_running", False)
+        status_text = "Online" if server_running else "Offline"
+        port_text = getattr(state, "port", "8000")
 
-    status_block = ft.Container(
-        content=ft.Row(
-            [
-                ft.Row(
+        if server_running:
+            dot_color = "#22c55e"
+            # Layered dot: soft halo + solid center
+            halo = ft.Container(
+                width=14, height=14, border_radius=7,
+                bgcolor=dot_color, opacity=0.25,
+            )
+            core = ft.Container(
+                width=7, height=7, border_radius=3.5,
+                bgcolor=dot_color,
+                alignment=ft.Alignment.CENTER,
+            )
+            status_dot: ft.Control = ft.Stack(
+                [halo, core],
+                width=14, height=14,
+                alignment=ft.Alignment.CENTER,
+            )
+            pulse_target["control"] = halo
+        else:
+            status_dot = ft.Container(
+                width=7, height=7, border_radius=3.5,
+                bgcolor=P["text_faint"],
+            )
+
+        footer_controls = [
+            ft.Container(
+                height=1,
+                bgcolor=P["border"],
+                margin=ft.Margin.symmetric(vertical=Space.md, horizontal=Space.md),
+            ),
+            ft.Container(
+                content=ft.Row(
                     [
                         status_dot,
-                        ft.Container(width=Space.sm + 2),
-                        status_label,
+                        ft.Container(width=Space.sm),
+                        ft.Text(status_text, size=12, color=P["text_muted"],
+                                weight=ft.FontWeight.W_500),
+                        ft.Container(expand=True),
+                        ft.Text(f"Port {port_text}", size=12, color=P["text_muted"]),
                     ],
                     spacing=0,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                port_label,
+                padding=ft.Padding.symmetric(horizontal=Space.md, vertical=Space.sm),
+            ),
+        ]
+
+    root = ft.Container(
+        content=ft.Column(
+            [
+                ft.Container(
+                    content=ft.Column(nav_items, spacing=0, tight=True),
+                    padding=ft.Padding.symmetric(horizontal=Space.sm, vertical=Space.md),
+                ),
+                ft.Container(expand=True),
+                ft.Column(footer_controls, spacing=0, tight=True),
             ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+            spacing=0,
+            expand=True,
         ),
-        padding=ft.Padding.symmetric(horizontal=Space.md, vertical=Space.md),
-        border=ft.Border.only(top=ft.BorderSide(1, P["border"])),
-    )
-
-    sidebar_content = ft.Column(
-        [nav_block, ft.Container(expand=True), status_block],
-        spacing=0, tight=True, expand=True,
-    )
-
-    return ft.Container(
-        content=sidebar_content,
-        width=220, bgcolor=P["bg"],
+        width=200,
+        bgcolor=P["bg"],
         border=ft.Border.only(right=ft.BorderSide(1, P["border"])),
         expand=True,
     )
 
+    # Kick off the async pulse once the control is mounted on a page.
+    halo_ctrl = pulse_target["control"]
+    if halo_ctrl is not None:
+        async def _pulse():
+            while True:
+                halo_ctrl.opacity = 0.45
+                try: halo_ctrl.update()
+                except Exception: pass
+                await asyncio.sleep(0.9)
+                halo_ctrl.opacity = 0.10
+                try: halo_ctrl.update()
+                except Exception: pass
+                await asyncio.sleep(0.9)
 
-def NavBar(P, selected_index, on_change, destinations):
-    """Mobile — Floating, modern bottom nav bar."""
-    
-    nav_bar = ft.NavigationBar(
-        selected_index=selected_index,
-        on_change=on_change,
-        destinations=[
-            ft.NavigationBarDestination(
-                icon=ft.Icon(d["icon"], size=24, color=P["text_muted"]),
-                selected_icon=ft.Icon(d["icon"], size=24, color=P["text"]),
-                label=d["label"],
-            )
-            for d in destinations
-        ],
-        bgcolor="transparent",
-        indicator_color=P["surface_2"],
-        elevation=0,
-        height=68,
-        label_behavior=ft.NavigationBarLabelBehavior.ALWAYS_SHOW,
-    )
+        def _start_pulse(_e=None):
+            try:
+                root.page.run_task(_pulse)
+            except Exception:
+                pass
 
-    return ft.Container(
-        content=nav_bar,
-        bgcolor=P["surface"],
-        border=ft.Border.all(1, P["border"]),
-        border_radius=24,
-        margin=ft.Margin.only(left=16, right=16, bottom=16),
-        shadow=ft.BoxShadow(
-            blur_radius=20,
-            color="#000000" if P["bg"] == "#000000" else "#00000010",
-            offset=ft.Offset(0, 4),
-        ),
-    )
+        root.on_update = _start_pulse
 
-
-def _dispatch_nav(on_change, index: int):
-    class _E:
-        def __init__(self, idx):
-            self.control = self
-            self.selected_index = idx
-    try:
-        on_change(_E(index))
-    except Exception:
-        pass
-
-
-def NavRail(P, selected_index, on_change, destinations, state=None):
-    return NavSidebar(P, selected_index, on_change, destinations, state=state)
+    return root

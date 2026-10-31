@@ -60,16 +60,23 @@ def build_settings(P, state, handlers, page_width=1200):
         on_select=lambda e: handlers["set_theme"](e.control.value or "auto"),
         width=200,
         height=46,
-        border_radius=Radius.lg,
         bgcolor=P["surface_2"],
-        border_color=P["border"],
-        focused_border_color=P["primary"],
         color=P["text"],
         text_style=ft.TextStyle(color=P["text"], size=15),
-        border_width=1,
         content_padding=ft.Padding.symmetric(
             horizontal=Space.md, vertical=0,
         ),
+        # Use the modern border API for Flet 1.0.4
+        border={
+            ft.ControlState.DEFAULT: ft.OutlineInputBorder(
+                border_radius=Radius.lg,
+                side=ft.BorderSide(1, P["border"]),
+            ),
+            ft.ControlState.FOCUSED: ft.OutlineInputBorder(
+                border_radius=Radius.lg,
+                side=ft.BorderSide(1, P["primary"]),
+            ),
+        },
     )
 
     appearance_card = SectionCard(
@@ -143,14 +150,13 @@ def build_settings(P, state, handlers, page_width=1200):
     
     if assets_dir:
         logo_filename = "logo_dark.png" if state.dark else "logo_light.png"
-        # Enlarge the logo to 48x48
         about_icon = ft.Container(
             content=ft.Image(
                 src=str(assets_dir / logo_filename),
-                width=32, height=32,
+                width=40, height=40,
                 fit=ft.BoxFit.CONTAIN
             ),
-            width=48, height=48,
+            width=56, height=56,
             bgcolor=P["surface_2"],
             border=ft.Border.all(1, P["border"]),
             border_radius=Radius.md,
@@ -158,7 +164,7 @@ def build_settings(P, state, handlers, page_width=1200):
             padding=ft.Padding.all(6),
         )
     else:
-        about_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=32, color=P["text_muted"])
+        about_icon = ft.Icon(ft.Icons.FOLDER_SHARED_ROUNDED, size=40, color=P["text_muted"])
 
     about_card = SectionCard(
         P, dark=state.dark,

@@ -1,9 +1,11 @@
 """Status chip — minimal, monochrome, with a pulsing green online dot."""
 from __future__ import annotations
 
+import asyncio
+
 import flet as ft
 
-from ..theme import Space, Radius, Type
+from ..theme import Space, Radius
 
 
 def StatusChip(P, text, tone="neutral"):
@@ -26,30 +28,40 @@ def StatusChip(P, text, tone="neutral"):
     }
     fg, bg, border = map_.get(tone, map_["neutral"])
 
-    # The status dot: green when online, muted otherwise.
     is_online = (tone == "online")
     dot_color = "#22c55e" if is_online else P["text_faint"]
 
-    dot = ft.Container(
-        width=7, height=7,
-        border_radius=3.5,
-        bgcolor=dot_color,
-        animate_opacity=ft.Animation(900, ft.AnimationCurve.EASE_IN_OUT),
-        opacity=1.0,
-        shadow=ft.BoxShadow(
-            blur_radius=6,
-            color=dot_color,
-            spread_radius=0,
-        ) if is_online else None,
-    )
+    if is_online:
+        # Layered dot: soft halo + solid center (matches the sidebar status dot).
+        halo = ft.Container(
+            width=14, height=14, border_radius=7,
+            bgcolor=dot_color, opacity=0.25,
+        )
+        core = ft.Container(
+            width=7, height=7, border_radius=3.5,
+            bgcolor=dot_color,
+            alignment=ft.Alignment.CENTER,
+        )
+        dot: ft.Control = ft.Stack(
+            [halo, core],
+            width=14, height=14,
+            alignment=ft.Alignment.CENTER,
+        )
+        pulse_halo = halo
+    else:
+        dot = ft.Container(
+            width=7, height=7,
+            border_radius=3.5,
+            bgcolor=dot_color,
+        )
+        pulse_halo = None
 
     chip = ft.Container(
         content=ft.Row(
             [
                 dot,
                 ft.Container(width=Space.sm),
-                ft.Text(text, color=fg, size=12,
-                        weight=ft.FontWeight.W_500),
+                ft.Text(text, color=fg, size=12, weight=ft.FontWeight.W_500),
             ],
             spacing=0,
             alignment=ft.MainAxisAlignment.CENTER,
@@ -63,32 +75,25 @@ def StatusChip(P, text, tone="neutral"):
         animate=ft.Animation(200, ft.AnimationCurve.EASE_OUT),
     )
 
-    # Start a slow pulse on the dot (only when online).
-    if is_online:
-        try:
-            async def _pulse():
-                import asyncio
-                while True:
-                    dot.opacity = 0.5
-                    try: dot.update()
-                    except Exception: pass
-                    await asyncio.sleep(0.6)
-                    dot.opacity = 1.0
-                    try: dot.update()
-                    except Exception: pass
-                    await asyncio.sleep(0.9)
+    # Kick off the async pulse once the chip is mounted on a page.
+    if pulse_halo is not None:
+        async def _pulse():
+            while True:
+                pulse_halo.opacity = 0.45
+                try: pulse_halo.update()
+                except Exception: pass
+                await asyncio.sleep(0.9)
+                pulse_halo.opacity = 0.10
+                try: pulse_halo.update()
+                except Exception: pass
+                await asyncio.sleep(0.9)
 
-            # `chip.page` is set once the control is attached to the page.
-            # Flet calls `did_mount` on the control, but we can also defer
-            # the task start via `chip.on_update` if `page` is available.
-            def _start_pulse():
-                try:
-                    chip.page.run_task(_pulse)
-                except Exception:
-                    pass
+        def _start_pulse(_e=None):
+            try:
+                chip.page.run_task(_pulse)
+            except Exception:
+                pass
 
-            chip.on_update = lambda e: _start_pulse()
-        except Exception:
-            pass
+        chip.on_update = _start_pulse
 
     return chip
