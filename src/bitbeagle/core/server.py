@@ -74,7 +74,7 @@ class FlaskServer:
         self.thread = threading.Thread(
             target=self._srv.serve_forever,
             daemon=True,
-            name="bloodhound-flask",
+            name="bitbeagle-flask",
         )
         self.thread.start()
         self.running = True

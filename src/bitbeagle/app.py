@@ -39,7 +39,7 @@ def run():
 # Splash launch tracker — controls first-run vs. subsequent-run
 # ============================================================
 def _launch_counter_path() -> Path:
-    base = Path.home() / ".cache" / "bloodhound"
+    base = Path.home() / ".cache" / "bitbeagle"
     try:
         flet_data = os.environ.get("FLET_APP_STORAGE_DATA")
         if flet_data:
@@ -204,11 +204,11 @@ def main(page: Page):
     brand_text = ft.Row(
         [
             ft.Text(
-                "Blood", size=38, weight=ft.FontWeight.W_500, color=p["text_muted"],
+                "Bit", size=38, weight=ft.FontWeight.W_500, color=p["text_muted"],
                 font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
             ),
             ft.Text(
-                "Hound", size=38, weight=ft.FontWeight.W_900, color=p["text"],
+                "Beagle", size=38, weight=ft.FontWeight.W_900, color=p["text"],
                 font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace",
                 style=ft.TextStyle(letter_spacing=3.5),
             ),
@@ -715,7 +715,7 @@ def main(page: Page):
             return
         ok = open_battery_optimization_dialog()
         if not ok:
-            log("Could not open battery settings. Please enable it manually in Settings > Apps > BloodHound > Battery.", "warn")
+            log("Could not open battery settings. Please enable it manually in Settings > Apps > BitBeagle > Battery.", "warn")
             render()
             return
         log("Battery settings opened. Waiting for your choice...", "info")
@@ -907,8 +907,8 @@ def main(page: Page):
             [
                 ft.Row(
                     [
-                        ft.Text("Blood", size=brand_size, weight=ft.FontWeight.W_500, color=p["text_muted"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
-                        ft.Text("Hound", size=brand_size, weight=ft.FontWeight.W_900, color=p["text"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
+                        ft.Text("Bit", size=brand_size, weight=ft.FontWeight.W_500, color=p["text_muted"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
+                        ft.Text("Beagle", size=brand_size, weight=ft.FontWeight.W_900, color=p["text"], font_family="ui-monospace, SF Mono, Menlo, Consolas, monospace"),
                     ],
                     spacing=0, tight=True
                 ),
@@ -1209,7 +1209,7 @@ def main(page: Page):
 
 
 def _configure_page(page: ft.Page):
-    page.title = "BloodHound"
+    page.title = "BitBeagle"
     page.padding = 0
     page.bgcolor = "#000000"
     page.theme_mode = ft.ThemeMode.DARK

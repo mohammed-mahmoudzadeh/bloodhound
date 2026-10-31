@@ -2,11 +2,11 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="src/assets/logo_dark.png">
     <source media="(prefers-color-scheme: light)" srcset="src/assets/logo_light.png">
-    <img src="src/assets/logo_light.png" alt="BloodHound logo" width="120" height="120">
+    <img src="src/assets/logo_light.png" alt="BitBeagle logo" width="120" height="120">
   </picture>
 </p>
 
-<h1 align="center">BloodHound</h1>
+<h1 align="center">BitBeagle</h1>
 
 <p align="center">
   <strong>Share files. Stay local. Keep it simple.</strong>
@@ -22,8 +22,8 @@
   <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/Flask-3.0-3BABC3.svg" alt="Flask"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/platform-Android%20%7C%20Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg" alt="Platforms">
-  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/stargazers"><img src="https://img.shields.io/github/stars/mohammed-mahmoudzadeh/bloodhound?style=social" alt="Stars"></a>
-  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/network/members"><img src="https://img.shields.io/github/forks/mohammed-mahmoudzadeh/bloodhound?style=social" alt="Forks"></a>
+  <a href="https://github.com/mohammed-mahmoudzadeh/bitbeagle/stargazers"><img src="https://img.shields.io/github/stars/mohammed-mahmoudzadeh/bitbeagle?style=social" alt="Stars"></a>
+  <a href="https://github.com/mohammed-mahmoudzadeh/bitbeagle/network/members"><img src="https://img.shields.io/github/forks/mohammed-mahmoudzadeh/bitbeagle?style=social" alt="Forks"></a>
 </p>
 
 ---
@@ -32,7 +32,7 @@
 
 Moving files between devices shouldn't require uploading them to a cloud service or creating an account.
 
-**BloodHound** runs a lightweight web server on your device and lets other devices on your local network access the files you choose to share. Open the generated address in a browser and browse your files directly — no cloud, no accounts, no hassle.
+**BitBeagle** runs a lightweight web server on your device and lets other devices on your local network access the files you choose to share. Open the generated address in a browser and browse your files directly — no cloud, no accounts, no hassle.
 
 Built with **Python**, **Flet** (Flutter for Python), and **Flask**, it combines a native-style application interface with a fast HTTP file server, plus a standalone CLI for headless environments.
 
@@ -55,7 +55,7 @@ Both modes share the same Flask file-browser backend.
   </a>
 </p>
 
-> Curious what BloodHound looks like? Browse the full gallery in [`docs/screenshots/`](docs/screenshots/).
+> Curious what BitBeagle looks like? Browse the full gallery in [`docs/screenshots/`](docs/screenshots/).
 ---
 
 ## ✨ Features
@@ -86,7 +86,7 @@ Both modes share the same Flask file-browser backend.
 Run the file-sharing server directly from a terminal — no GUI required.
 
 ```bash
-bloodhound --dir /path/to/folder
+bitbeagle --dir /path/to/folder
 ```
 
 Perfect for:
@@ -118,8 +118,8 @@ Installation
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/mohammed-mahmoudzadeh/bloodhound.git
-cd bloodhound
+git clone https://github.com/mohammed-mahmoudzadeh/bitbeagle.git
+cd bitbeagle
 
 # 2. Create and activate a virtual environment
 python -m venv .venv
@@ -156,21 +156,21 @@ First-time setup:
 
 ⌨️ CLI Usage
 
-After pip install -e ., the bloodhound command is available on your PATH:
+After pip install -e ., the bitbeagle command is available on your PATH:
 
 ```bash
-bloodhound --dir ~/Documents
+bitbeagle --dir ~/Documents
 ```
 
 If you prefer to run from source without installing:
 
 ```bash
 # Linux / macOS
-PYTHONPATH=src python -m bloodhound.core.share --dir /path/to/folder
+PYTHONPATH=src python -m bitbeagle.core.share --dir /path/to/folder
 
 # Windows PowerShell
 $env:PYTHONPATH = "src"
-python -m bloodhound.core.share --dir "C:\path\to\folder"
+python -m bitbeagle.core.share --dir "C:\path\to\folder"
 ```
 
 CLI options
@@ -184,15 +184,15 @@ Flag Short Description
 
 Bash completion
 
-A completion script is included at completion/bloodhound. To install it manually:
+A completion script is included at completion/bitbeagle. To install it manually:
 
 ```bash
 # System-wide (requires sudo)
-sudo cp completion/bloodhound /etc/bash_completion.d/
+sudo cp completion/bitbeagle /etc/bash_completion.d/
 
 # Per-user
 mkdir -p ~/.local/share/bash-completion/completions
-cp completion/bloodhound ~/.local/share/bash-completion/completions/
+cp completion/bitbeagle ~/.local/share/bash-completion/completions/
 ```
 
 Then reload your shell:
@@ -239,11 +239,11 @@ Android permissions, icons, and splash screens are configured in pyproject.toml.
 📁 Project Layout
 
 ```
-bloodhound/
+bitbeagle/
 ├── pyproject.toml              # Build config, dependencies, Android settings
 ├── requirements.txt            # Pinned Python dependencies
 ├── completion/
-│   └── bloodhound              # Bash CLI completion
+│   └── bitbeagle              # Bash CLI completion
 └── src/
     ├── main.py                 # Flet entry point
     ├── assets/                 # Icons and splash images
@@ -251,7 +251,7 @@ bloodhound/
     │   ├── logo_dark.png
     │   ├── logo_light.png
     │   └── splash_android*.png
-    └── bloodhound/
+    └── bitbeagle/
         ├── app.py              # Flet UI shell
         ├── state.py            # Shared application state
         ├── settings_store.py   # Local settings persistence
@@ -277,14 +277,14 @@ Key files
 Path Responsibility
 pyproject.toml Build config, app metadata, dependencies, Android settings
 src/main.py Application entry point
-src/bloodhound/app.py Flet UI shell and rendering lifecycle
-src/bloodhound/state.py Shared application state
-src/bloodhound/theme/ Design tokens (colors, typography, spacing)
-src/bloodhound/components/ Reusable UI components
-src/bloodhound/views/ Dashboard, Activity, Settings views
-src/bloodhound/core/server.py Flask server lifecycle wrapper
-src/bloodhound/core/network.py IPv4 interface discovery
-src/bloodhound/core/share/ Flask routes, templates, static assets, streaming, thumbnails, watcher
+src/bitbeagle/app.py Flet UI shell and rendering lifecycle
+src/bitbeagle/state.py Shared application state
+src/bitbeagle/theme/ Design tokens (colors, typography, spacing)
+src/bitbeagle/components/ Reusable UI components
+src/bitbeagle/views/ Dashboard, Activity, Settings views
+src/bitbeagle/core/server.py Flask server lifecycle wrapper
+src/bitbeagle/core/network.py IPv4 interface discovery
+src/bitbeagle/core/share/ Flask routes, templates, static assets, streaming, thumbnails, watcher
 
 ---
 
@@ -292,7 +292,7 @@ src/bloodhound/core/share/ Flask routes, templates, static assets, streaming, th
 
 Network interfaces
 
-BloodHound auto-detects available IPv4 interfaces. You can choose:
+BitBeagle auto-detects available IPv4 interfaces. You can choose:
 
 Address Behavior
 0.0.0.0 Listen on all IPv4 interfaces
@@ -335,13 +335,13 @@ Optional dependencies
 
 🔒 Security Considerations
 
-BloodHound has no built-in authentication. Anyone who can reach the server URL and port can browse and download shared files. Treat it as a trusted-LAN tool.
+BitBeagle has no built-in authentication. Anyone who can reach the server URL and port can browse and download shared files. Treat it as a trusted-LAN tool.
 
 · ✅ Share only folders you intend to expose on your LAN.
 · ✅ Bind to a specific LAN interface when possible.
 · ✅ Use a firewall to restrict access.
 · ✅ Close the server when you're done.
-· ❌ Do not expose BloodHound directly to the internet.
+· ❌ Do not expose BitBeagle directly to the internet.
 · ❌ Do not share sensitive directories on untrusted networks.
 
 Additional notes
@@ -446,9 +446,9 @@ This project is licensed under the MIT License — see the LICENSE file for deta
 </p>
 
 <p align="center">
-  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/issues">Report Bug</a>
+  <a href="https://github.com/mohammed-mahmoudzadeh/bitbeagle/issues">Report Bug</a>
   ·
-  <a href="https://github.com/mohammed-mahmoudzadeh/bloodhound/issues">Request Feature</a>
+  <a href="https://github.com/mohammed-mahmoudzadeh/bitbeagle/issues">Request Feature</a>
   ·
-  <a href="#bloodhound">Back to top</a>
+  <a href="#bitbeagle">Back to top</a>
 </p>

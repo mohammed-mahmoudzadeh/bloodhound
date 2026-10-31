@@ -1,4 +1,4 @@
-"""BloodHound web server package — façade + entry point."""
+"""BitBeagle web server package — façade + entry point."""
 from __future__ import annotations
 
 from pathlib import Path

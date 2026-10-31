@@ -173,7 +173,7 @@ def build_settings(P, state, handlers, page_width=1200):
             [
                 _row_setting(
                     P,
-                    "BloodHound",
+                    "BitBeagle",
                     "Version 1.0.0 — Local file sharing.",
                     about_icon,
                 ),

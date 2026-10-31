@@ -1,5 +1,5 @@
 [project]
-name = "bloodhound"
+name = "bitbeagle"
 version = "1.0.0"
 description = "Share files over your local network — Android & desktop"
 license = "MIT"
@@ -25,7 +25,7 @@ android = [
 ]
 
 [project.scripts]
-bloodhound = "bloodhound.core.share.__main__:main"
+bitbeagle = "bitbeagle.core.share.__main__:main"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
@@ -38,16 +38,16 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-"bloodhound.core.share" = ["templates/*.html", "static/*.css", "static/*.js"]
+"bitbeagle.core.share" = ["templates/*.html", "static/*.css", "static/*.js"]
 
 [tool.setuptools.data-files]
-"/etc/bash_completion.d" = ["completion/bloodhound"]
+"/etc/bash_completion.d" = ["completion/bitbeagle"]
 
 [tool.flet]
-org = "org.bloodhound"
-product = "BloodHound"
-company = "BloodHound"
-copyright = "Copyright (C) 2026 BloodHound"
+org = "org.bitbeagle"
+product = "BitBeagle"
+company = "BitBeagle"
+copyright = "Copyright (C) 2026 BitBeagle"
 
 [tool.flet.app]
 path = "src"

@@ -16,11 +16,11 @@ def _settings_path() -> Path:
     if flet_data_dir:
         data_dir = Path(flet_data_dir)
     elif sys.platform == "win32":
-        data_dir = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "BloodHound"
+        data_dir = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming")) / "BitBeagle"
     elif sys.platform == "darwin":
-        data_dir = Path.home() / "Library" / "Application Support" / "BloodHound"
+        data_dir = Path.home() / "Library" / "Application Support" / "BitBeagle"
     else:
-        data_dir = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")) / "bloodhound"
+        data_dir = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")) / "bitbeagle"
     return data_dir / "settings.json"
 
 

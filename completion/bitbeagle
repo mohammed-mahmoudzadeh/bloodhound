@@ -1,0 +1,7 @@
+# Bash completion for bitbeagle
+# This file is installed to /etc/bash_completion.d/bitbeagle
+
+_bitbeagle_completion() {
+    eval "$(register-python-argcomplete bitbeagle)"
+}
+complete -F _bitbeagle_completion bitbeagle

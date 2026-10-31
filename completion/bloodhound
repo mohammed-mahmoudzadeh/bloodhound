@@ -1,7 +1,0 @@
-# Bash completion for bloodhound
-# This file is installed to /etc/bash_completion.d/bloodhound
-
-_bloodhound_completion() {
-    eval "$(register-python-argcomplete bloodhound)"
-}
-complete -F _bloodhound_completion bloodhound
